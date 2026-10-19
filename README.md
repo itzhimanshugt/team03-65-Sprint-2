@@ -106,6 +106,8 @@ financial-compliance-rag/
 │   ├── citations.py
 │   └── guardrails.py
 ├── evaluation/
+├── prompts/          # reusable prompt templates
+├── outputs/          # eval reports, experiment results
 ├── tests/
 ├── data/
 │   ├── raw/
@@ -137,7 +139,7 @@ Windows:
 Install dependencies:
 
 ``` bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # app + test/lint tools
 ```
 
 ## Environment Variables
