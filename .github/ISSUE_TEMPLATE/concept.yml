@@ -1,0 +1,33 @@
+name: Concept task
+description: One graded Sprint 2 concept, delivered as one pull request
+title: "[C<n>] <Concept name>"
+labels: ["concept"]
+assignees: ["itzhimanshugt"]
+body:
+  - type: input
+    id: concept
+    attributes:
+      label: Concept
+      placeholder: "C12 — Document Chunking Strategies"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: In VerifAI
+      description: What this concept means for our app
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: input
+    id: prd
+    attributes:
+      label: PRD reference
+      placeholder: "§6.2, FR-4"

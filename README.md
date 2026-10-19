@@ -219,6 +219,8 @@ endpoints as those components are implemented.
 
 ## GitHub Workflow
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch naming, PR rules and the protections on `main`. Track work on the [Sprint 2 board](https://github.com/users/itzhimanshugt/projects/2).
+
 ``` text
 Issue → Feature Branch → Implementation → Testing → Pull Request → Review → Merge
 ```
