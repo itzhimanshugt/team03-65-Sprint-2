@@ -5,10 +5,13 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+
 
 @dataclass(frozen=True)
 class Settings:
     llm_api_key: str
+    llm_base_url: str
     llm_model: str
     embedding_model: str
     chroma_path: str
@@ -22,8 +25,9 @@ def get_settings() -> Settings:
     load_dotenv()
     return Settings(
         llm_api_key=os.getenv("LLM_API_KEY", ""),
-        llm_model=os.getenv("LLM_MODEL", ""),
-        embedding_model=os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"),
+        llm_base_url=os.getenv("LLM_BASE_URL", GEMINI_BASE_URL),
+        llm_model=os.getenv("LLM_MODEL", "gemini-2.5-flash"),
+        embedding_model=os.getenv("EMBEDDING_MODEL", "gemini-embedding-001"),
         chroma_path=os.getenv("CHROMA_PATH", "data/chroma"),
         chunk_size=int(os.getenv("CHUNK_SIZE", "400")),
         chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "60")),

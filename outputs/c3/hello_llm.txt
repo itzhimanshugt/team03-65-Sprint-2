@@ -1,0 +1,3 @@
+Model: gemini-2.5-flash
+Answer: A mutual fund exit load is a fee charged by the fund house when an investor sells or redeems their mutual fund units, typically if done before a specified holding period.
+Tokens: 13 in / 34 out
