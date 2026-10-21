@@ -360,7 +360,7 @@ Likelihood (L) and Impact (I) are scored 1 (low) – 3 (high). Severity = L × I
 | LLM/API outage or rate limit | 2 | 2 | 4 – Medium | Advisors cannot get answers; demo failure | Retries with backoff, clear error state, configurable provider | Error rate > 5% in logs |
 | Latency above target | 2 | 2 | 4 – Medium | Slower than asking a colleague → low adoption | Batch embedding at index time, answer cache, top-5 context cap, streaming | p95 > 8 s |
 | Duplicate documents | 2 | 1 | 2 – Low | Repeated citations, wasted context budget | SHA-256 checksum dedup | Duplicate checksum on upload |
-| Free-tier API quota | 3 | 2 | **6 – High** | Scripts, evaluation or the live demo stop mid-run when daily quotas (about 20 requests per model) are used up | Model fallback chain, answer cache (C39), 40-question eval set, run evals early in the day (quotas reset at midnight Pacific) | 429 errors in logs |
+| Free-tier API quota | 3 | 2 | **6 – High** | Scripts, evaluation or the live demo stop mid-run when per-model daily quotas (observed: 20 requests/day on the 2.5 models; varies by model) are used up | Model fallback chain, answer cache (C39), 40-question eval set, run evals early in the day (quotas reset at midnight Pacific) | 429 errors in logs |
 | Team capacity (team reduced from 3 to 1 member) | 3 | 2 | **6 – High** | Scope slips; Should/Could stories may not ship | MoSCoW prioritisation; Must stories first; re-use libraries; weekly scope check | Milestone missed by > 2 days |
 
 ---
