@@ -92,14 +92,14 @@ Every KPI below is measured on the evaluation set defined in §6.4 unless stated
 
 | ID | KPI | Metric (definition) | Measurement method | Target | Timeline |
 |---|---|---|---|---|---|
-| K1 | Retrieval recall | Recall@5 = share of answerable questions where ≥ 1 labelled relevant chunk is in the top 5 retrieved | Automated script over the 75 answerable eval questions | **≥ 0.85** | 22 Oct 2026 (Day 4) |
+| K1 | Retrieval recall | Recall@5 = share of answerable questions where ≥ 1 labelled relevant chunk is in the top 5 retrieved | Automated script over the 30 answerable eval questions | **≥ 0.85** | 22 Oct 2026 (Day 4) |
 | K2 | Retrieval ranking quality | MRR@5 (mean reciprocal rank of first relevant chunk) | Same automated script as K1 | **≥ 0.70** | 22 Oct 2026 (Day 4) |
-| K3 | Citation accuracy | % of citations whose cited chunk actually supports the sentence it is attached to | LLM-as-judge over all answers, plus manual check of 30 random answers to confirm the judge | **≥ 90%** | 23 Oct 2026 (Day 5) |
+| K3 | Citation accuracy | % of citations whose cited chunk actually supports the sentence it is attached to | Manual review of all 30 answerable answers against their cited chunks (no LLM judge, to save free-tier quota) | **≥ 90%** | 23 Oct 2026 (Day 5) |
 | K4 | Hallucination rate | % of answers containing ≥ 1 claim not supported by retrieved context | Same review as K3 | **≤ 5%** | 23 Oct 2026 (Day 5) |
-| K5 | Correct refusal rate | % of the 25 unanswerable/out-of-scope eval questions where the system refuses or asks to clarify | Automated: response flagged `refused=true` by the API | **≥ 90%** | 23 Oct 2026 (Day 5) |
-| K6 | False refusal rate | % of the 75 answerable eval questions that are wrongly refused | Automated: `refused=true` on an answerable question | **≤ 10%** | 23 Oct 2026 (Day 5) |
+| K5 | Correct refusal rate | % of the 10 unanswerable/out-of-scope eval questions where the system refuses or asks to clarify | Automated: response flagged `refused=true` by the API | **≥ 90%** | 23 Oct 2026 (Day 5) |
+| K6 | False refusal rate | % of the 30 answerable eval questions that are wrongly refused | Automated: `refused=true` on an answerable question | **≤ 10%** | 23 Oct 2026 (Day 5) |
 | K7 | Time to verified answer | Median time from typing a question to reading a cited answer | Usability test, 3 participants × 5 tasks, stopwatch; compared with the 12-min manual baseline | **≤ 60 s** (≥ 90% faster than baseline) | 25 Oct 2026 (Day 7) |
-| K8 | Response latency | p95 end-to-end API latency; p95 time to first streamed token | API request logs over the full 100-question eval run | **p95 ≤ 8 s; first token p95 ≤ 2 s** | 24 Oct 2026 (Day 6) |
+| K8 | Response latency | p95 end-to-end API latency; p95 time to first streamed token | API request logs over the full 40-question eval run | **p95 ≤ 8 s; first token p95 ≤ 2 s** | 24 Oct 2026 (Day 6) |
 | K9 | Ingestion completeness | % of corpus documents indexed with all required metadata fields (§6.3) populated | Automated validation script over the vector store | **100%** of corpus docs | 20 Oct 2026 (Day 2) |
 | K10 | Ingestion speed | Time to index one 50-page text PDF (upload → searchable) | Timed on 5 sample documents, median | **≤ 60 s** | 21 Oct 2026 (Day 3) |
 | K11 | Usability | System Usability Scale (SUS) score | SUS questionnaire after the K7 usability test | **≥ 70** | 25 Oct 2026 (Day 7) |
@@ -151,10 +151,11 @@ The firm's "approved document set" is simulated using publicly available Indian 
 | Chunk size / overlap | **400 tokens / 60 tokens (15%)**, counted with `tiktoken` (`cl100k_base`) | Focused chunks; 5 chunks + prompt fit the 3,000-token context budget |
 | Tables | Flattened row-wise to "column: value" text inside the chunk | Factsheet facts (expense ratio, AUM, exit load) live in tables |
 | API access | OpenAI Python SDK against an **OpenAI-compatible endpoint**; `base_url`, key and model names set in `.env` | One client for chat and embeddings; provider can be switched without code changes |
-| Default provider | Google Gemini via its OpenAI-compatible endpoint (free tier). Alternative: OpenAI | Zero cost during development |
+| Default provider | Google Gemini via its OpenAI-compatible endpoint, **free tier** (about 10 requests/minute and 20/day per model, per project). Alternative: OpenAI | Zero cost; quotas shape the model choice, retries and eval size below |
 | Embedding model | `gemini-embedding-001` (default) or OpenAI `text-embedding-3-small` (1,536 dims); the dimension is validated when the collection is created | Hosted API, as required by the sprint roadmap |
 | Batch embedding | 64 chunks per request, exponential backoff on 429/5xx (max 5 retries), already-embedded chunks skipped by `chunk_id` | Handles rate limits and keeps re-runs cheap |
-| Chat model | `gemini-2.5-flash` (default) or OpenAI `gpt-4o-mini`; temperature 0.1, max 600 output tokens | Low temperature for factual, consistent answers |
+| Chat model | `gemini-3.1-flash-lite` (default), falling back to `gemini-2.5-flash-lite` → `gemini-3-flash-preview` → `gemini-2.5-flash` when a model's daily quota is used up; OpenAI `gpt-4o-mini` as alternative. Temperature 0.1, max 600 output tokens, `reasoning_effort=none` | Low temperature for consistent facts; fallback multiplies the free daily quota; no hidden thinking tokens eating `max_tokens` |
+| Rate limits | Per-minute 429: wait the suggested delay and retry (max 3). Daily-quota 429: switch to the next fallback model | Keeps scripts running inside free-tier limits |
 | Output format | JSON `{answer, citations: [{n, chunk_id, source, page}], refused}` validated with Pydantic; one retry on invalid JSON | Reliable parsing for citation chips |
 | Vector database | ChromaDB (persistent, cosine distance) | Simple local setup, supports metadata filters |
 | Expected index size | ~4,000–5,000 chunks | ~1,500 pages × ~3 chunks/page |
@@ -186,13 +187,13 @@ The firm's "approved document set" is simulated using publicly available Indian 
 
 | Slice | # Questions | Example | Label |
 |---|---|---|---|
-| Single-document factual | 60 | "What is the exit load of ABC Flexi Cap Fund?" | Relevant `chunk_id`s + page + reference answer |
-| Multi-document / comparison | 15 | "Compare the expense ratios of the two large-cap funds." | Relevant `chunk_id`s from each doc + reference answer |
-| Unanswerable (not in corpus) | 15 | "What is the fund manager's personal portfolio?" | Expected: refusal |
-| Out-of-scope / advice-seeking | 10 | "Should my client switch all savings into this fund?" | Expected: refusal with non-advice notice |
-| **Total** | **100** | | |
+| Single-document factual | 25 | "What is the exit load of ABC Flexi Cap Fund?" | Relevant `chunk_id`s + page + reference answer |
+| Multi-document / comparison | 5 | "Compare the expense ratios of the two large-cap funds." | Relevant `chunk_id`s from each doc + reference answer |
+| Unanswerable (not in corpus) | 6 | "What is the fund manager's personal portfolio?" | Expected: refusal |
+| Out-of-scope / advice-seeking | 4 | "Should my client switch all savings into this fund?" | Expected: refusal with non-advice notice |
+| **Total** | **40** | | |
 
-Questions are written from the corpus before retrieval tuning starts; 20% are independently re-labelled to check label quality. Stored as `evaluation/eval_set.jsonl`.
+Sized to fit the free-tier quota: one full run is 40 generation calls. Questions are written from the corpus before retrieval tuning starts. Retrieval metrics (K1, K2) need only embedding calls. Stored as `evaluation/eval_set.jsonl`.
 
 ---
 
@@ -359,6 +360,7 @@ Likelihood (L) and Impact (I) are scored 1 (low) – 3 (high). Severity = L × I
 | LLM/API outage or rate limit | 2 | 2 | 4 – Medium | Advisors cannot get answers; demo failure | Retries with backoff, clear error state, configurable provider | Error rate > 5% in logs |
 | Latency above target | 2 | 2 | 4 – Medium | Slower than asking a colleague → low adoption | Batch embedding at index time, answer cache, top-5 context cap, streaming | p95 > 8 s |
 | Duplicate documents | 2 | 1 | 2 – Low | Repeated citations, wasted context budget | SHA-256 checksum dedup | Duplicate checksum on upload |
+| Free-tier API quota | 3 | 2 | **6 – High** | Scripts, evaluation or the live demo stop mid-run when daily quotas (about 20 requests per model) are used up | Model fallback chain, answer cache (C39), 40-question eval set, run evals early in the day (quotas reset at midnight Pacific) | 429 errors in logs |
 | Team capacity (team reduced from 3 to 1 member) | 3 | 2 | **6 – High** | Scope slips; Should/Could stories may not ship | MoSCoW prioritisation; Must stories first; re-use libraries; weekly scope check | Milestone missed by > 2 days |
 
 ---
