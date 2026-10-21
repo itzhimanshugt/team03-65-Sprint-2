@@ -177,6 +177,22 @@ Relevant Context
 
 Retrieved chunks must retain enough metadata to generate citations.
 
+## Vector Store
+
+ChromaDB, persistent at `CHROMA_PATH` (default `data/chroma`, git-ignored), one collection:
+
+| Setting | Value |
+|---|---|
+| Collection | `verifai_chunks` |
+| Distance | cosine (`hnsw:space = cosine`; Chroma returns distance = 1 − cosine similarity) |
+| Vector size | `EMBEDDING_DIMENSIONS` (768), checked when the collection opens |
+| Embedding function | none: vectors always come from `embed_texts` (L2-normalised) |
+| `id` | `chunk_id` (`{doc_id}-{chunk_index:04d}`) |
+| `document` | chunk text |
+| `metadata` | `doc_id`, `chunk_index`, `source_name`, `title`, `doc_type`, `issuer`, `family`, `published_date`, `version`, `is_latest`, `page`, `token_count`, `checksum` |
+
+Metadata keeps everything needed to **cite** (source, page, version) and to **filter** (type, issuer, date, latest only), so retrieval never has to reopen the source files.
+
 ## Grounded Generation
 
 The generation layer should: - Answer from retrieved evidence. - Avoid
