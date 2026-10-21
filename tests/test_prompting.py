@@ -15,3 +15,20 @@ def test_system_prompt_contains_core_rules():
     prompt = load_system_prompt()
     assert "approved document" in prompt
     assert "investment advice" in prompt
+
+
+def test_render_fills_placeholders():
+    from app.prompting import render_prompt
+
+    text = render_prompt("answer", context="[1] Exit load: 1%.", question="What is the exit load?")
+    assert "[1] Exit load: 1%." in text and "Question: What is the exit load?" in text
+    assert "$" not in text
+
+
+def test_render_missing_value_raises():
+    import pytest
+
+    from app.prompting import render_prompt
+
+    with pytest.raises(KeyError):
+        render_prompt("answer", question="q")
