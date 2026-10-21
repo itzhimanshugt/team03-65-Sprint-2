@@ -20,6 +20,7 @@ class Settings:
     llm_max_tokens: int
     llm_reasoning_effort: str
     embedding_model: str
+    embedding_dimensions: int
     chroma_path: str
     chunk_size: int
     chunk_overlap: int
@@ -42,6 +43,7 @@ def get_settings() -> Settings:
         llm_max_tokens=int(os.getenv("LLM_MAX_TOKENS", "600")),
         llm_reasoning_effort=os.getenv("LLM_REASONING_EFFORT", "none"),
         embedding_model=os.getenv("EMBEDDING_MODEL", "gemini-embedding-001"),
+        embedding_dimensions=int(os.getenv("EMBEDDING_DIMENSIONS", "768")),
         chroma_path=os.getenv("CHROMA_PATH", "data/chroma"),
         chunk_size=int(os.getenv("CHUNK_SIZE", "400")),
         chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "60")),
