@@ -25,7 +25,8 @@ def _encoding() -> tiktoken.Encoding:
 
 
 def count_tokens(text: str) -> int:
-    return len(_encoding().encode(text))
+    # Count special-token strings (e.g. <|endoftext|>) as plain text instead of raising.
+    return len(_encoding().encode(text, disallowed_special=()))
 
 
 def count_message_tokens(messages: list[dict]) -> int:

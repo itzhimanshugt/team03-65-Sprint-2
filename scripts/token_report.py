@@ -58,7 +58,9 @@ lines += [
     f"${estimate_cost('gemini-2.5-flash', per_question_in * 100, per_question_out * 100):.3f} | "
     f"${estimate_cost('gpt-4o-mini', per_question_in * 100, per_question_out * 100):.3f} |",
     "",
-    "On Gemini's free tier these calls cost $0; the limit is requests per minute, not money.",
+    "On Gemini's free tier these calls cost $0; the limit is the request and token quota "
+    "(requests per minute and per day, input tokens per minute), not money. Output assumes "
+    "thinking is off; Gemini 2.5 thinking tokens are billed as output and would raise it.",
 ]
 
 out = Path("outputs/c5/token_report.md")

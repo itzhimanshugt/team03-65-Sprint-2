@@ -25,3 +25,7 @@ def test_estimate_cost():
 def test_unknown_model_raises():
     with pytest.raises(KeyError):
         estimate_cost("unknown-model", 10)
+
+
+def test_special_token_strings_are_counted_not_rejected():
+    assert count_tokens("before <|endoftext|> after") > 3
