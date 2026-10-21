@@ -45,3 +45,29 @@ def test_chunks_keep_their_page():
     chunks = chunk_document(doc, 70)
     assert [p for p, _ in chunks] == [3, 4, 4]
     assert [p for p, _ in chunk_document(doc, 70, strategy="fixed")][0] == 3
+
+
+def test_overlap_repeats_tail_of_previous_chunk():
+    lines = "\n".join(f"line {i} says something" for i in range(12))
+    chunks = recursive_split(lines, 80, overlap=30)
+    assert len(chunks) > 1
+    for prev, nxt in zip(chunks, chunks[1:], strict=False):
+        assert nxt.splitlines()[0] == prev.splitlines()[-1]
+        assert len(nxt) <= 80
+
+
+def test_overlap_zero_means_no_repeats():
+    lines = "\n".join(f"line {i} says something" for i in range(12))
+    chunks = recursive_split(lines, 80)
+    assert sum(len(c.splitlines()) for c in chunks) == 12
+
+
+def test_token_chunks_stay_under_limit_with_overlap():
+    from app.tokens import count_tokens
+    from ingestion.chunker import chunk_by_tokens
+
+    text = "\n".join(f"Scheme {i}: exit load {i % 3}% within {i * 30} days." for i in range(300))
+    chunks = chunk_by_tokens(Document("f.pdf", "pdf", [(1, text)]))
+    assert max(count_tokens(c) for _, c in chunks) <= 400
+    first_line_of_second = chunks[1][1].splitlines()[0]
+    assert first_line_of_second in chunks[0][1]  # overlap carried over
