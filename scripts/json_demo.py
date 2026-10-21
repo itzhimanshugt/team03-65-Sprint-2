@@ -5,7 +5,7 @@ Run: python -m scripts.json_demo  (writes outputs/c8/json_demo.md)
 
 from pathlib import Path
 
-from app.prompting import load_system_prompt
+from app.prompting import build_messages, load_system_prompt, render_prompt
 from app.structured import Answer, complete_json
 
 CONTEXT = """[1] chunk_id=abc-fs-0003 source="ABC Flexi Cap Fund Factsheet – Sep 2026.pdf" page=4
@@ -29,10 +29,8 @@ lines = [
     "```",
 ]
 for q in QUESTIONS:
-    messages = [
-        {"role": "system", "content": load_system_prompt()},
-        {"role": "user", "content": f"Context:\n{CONTEXT}\n\nQuestion: {q}\nCite sources as [n]."},
-    ]
+    prompt = render_prompt("answer", context=CONTEXT, question=q)
+    messages = build_messages(prompt, load_system_prompt())
     result = complete_json(messages, Answer)
     lines += ["", f"## Q: {q}", "", "```json", result.model_dump_json(indent=2), "```"]
 
