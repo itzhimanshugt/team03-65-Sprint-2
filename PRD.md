@@ -151,11 +151,11 @@ The firm's "approved document set" is simulated using publicly available Indian 
 | Chunk size / overlap | **400 tokens / 60 tokens (15%)**, counted with `tiktoken` (`cl100k_base`) | Focused chunks; 5 chunks + prompt fit the 3,000-token context budget |
 | Tables | Flattened row-wise to "column: value" text inside the chunk | Factsheet facts (expense ratio, AUM, exit load) live in tables |
 | API access | OpenAI Python SDK against an **OpenAI-compatible endpoint**; `base_url`, key and model names set in `.env` | One client for chat and embeddings; provider can be switched without code changes |
-| Default provider | Google Gemini via its OpenAI-compatible endpoint, **free tier** (about 10 requests/minute and 20/day per model, per project). Alternative: OpenAI | Zero cost; quotas shape the model choice, retries and eval size below |
+| Default provider | Google Gemini via its OpenAI-compatible endpoint, **free tier**. Limits vary by model and tier and are not guaranteed; observed for this project on 19 Oct 2026: 10 requests/minute and 20/day on `gemini-2.5-flash` and `gemini-2.5-flash-lite` (check AI Studio → Rate limits for the current values per model). Alternative: OpenAI | Zero cost; quotas shape the model choice, retries and eval size below |
 | Embedding model | `gemini-embedding-001` (default) or OpenAI `text-embedding-3-small` (1,536 dims); the dimension is validated when the collection is created | Hosted API, as required by the sprint roadmap |
 | Batch embedding | 64 chunks per request, exponential backoff on 429/5xx (max 5 retries), already-embedded chunks skipped by `chunk_id` | Handles rate limits and keeps re-runs cheap |
-| Chat model | `gemini-3.1-flash-lite` (default), falling back to `gemini-2.5-flash-lite` → `gemini-3-flash-preview` → `gemini-2.5-flash` when a model's daily quota is used up; OpenAI `gpt-4o-mini` as alternative. Temperature 0.1, max 600 output tokens, `reasoning_effort=none` | Low temperature for consistent facts; fallback multiplies the free daily quota; no hidden thinking tokens eating `max_tokens` |
-| Rate limits | Per-minute 429: wait the suggested delay and retry (max 3). Daily-quota 429: switch to the next fallback model | Keeps scripts running inside free-tier limits |
+| Chat model | `gemini-3.1-flash-lite` (default), falling back to `gemini-2.5-flash-lite` → `gemini-3-flash-preview` → `gemini-2.5-flash` when a model's daily quota is used up; OpenAI `gpt-4o-mini` as alternative. Temperature 0.1, max 600 output tokens, `reasoning_effort=none`: turns thinking off on 2.5 models; Gemini 3 models accept it (verified live) but may still use minimal thinking, so their output budget keeps headroom | Low temperature for consistent facts; fallback multiplies the free daily quota; no hidden thinking tokens eating `max_tokens` |
+| Rate limits | Per-minute 429: wait the delay stated in Google's error message ("retry in Ns") and retry, max 3 times. Daily-quota 429 (delay over 90 s) or no stated delay: switch to the next fallback model; with none left, fail with the error | Keeps scripts running inside free-tier limits |
 | Output format | JSON `{answer, citations: [{n, chunk_id, source, page}], refused}` validated with Pydantic; one retry on invalid JSON | Reliable parsing for citation chips |
 | Vector database | ChromaDB (persistent, cosine distance) | Simple local setup, supports metadata filters |
 | Expected index size | ~4,000–5,000 chunks | ~1,500 pages × ~3 chunks/page |
@@ -193,7 +193,7 @@ The firm's "approved document set" is simulated using publicly available Indian 
 | Out-of-scope / advice-seeking | 4 | "Should my client switch all savings into this fund?" | Expected: refusal with non-advice notice |
 | **Total** | **40** | | |
 
-Sized to fit the free-tier quota: one full run is 40 generation calls. Questions are written from the corpus before retrieval tuning starts. Retrieval metrics (K1, K2) need only embedding calls. Stored as `evaluation/eval_set.jsonl`.
+Sized to fit the free-tier quota: one full run is 40 generation calls, at most 80 in the worst case (one corrective retry per answer for invalid JSON). Runs are spread across the fallback models and started early in the day (quotas reset at midnight Pacific). Questions are written from the corpus before retrieval tuning starts. Retrieval metrics (K1, K2) need only embedding calls. Stored as `evaluation/eval_set.jsonl`.
 
 ---
 
