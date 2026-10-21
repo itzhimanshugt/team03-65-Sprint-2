@@ -43,3 +43,8 @@ wheels/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Downloaded corpus (re-create with: python -m scripts.download_corpus)
+data/raw/*
+!data/raw/.gitkeep
+data/chroma/
