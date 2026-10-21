@@ -2,7 +2,37 @@
 
 Companion to [PRD.md](../PRD.md) §8–§9. This file is the spec for the Figma updates requested in review: **annotations**, **empty states** and a **flow diagram**.
 
-Figma file: [team03-sprint2-verifai](https://www.figma.com/design/7pcEIJXsNINuurET3JCF9y/team03-sprint2-verifai-?node-id=0-1)
+Figma file: [team03-sprint2-verifai](https://www.figma.com/design/S3lVpz5bkKkSrrjuv9URYr/team03-sprint2-verifai-?node-id=0-1)
+
+## Status in Figma (done)
+
+The Figma file now contains everything this spec asks for:
+
+| Page | What it contains |
+|---|---|
+| **01 Screens** | The 8 original screens, each with numbered gold annotation markers (A1.1 …) and an *Annotations* card beside it |
+| **02 Empty & error states** | All 11 states below (S1a–S6a), in the file's visual style |
+| **03 User flow** | Advisor and compliance lanes with every screen, state and decision |
+
+Screen content was also aligned with the PRD, keeping the visual design:
+
+- **Regulation:** US references (FINRA 2111, SEC Reg BI, Form ADV, EDGAR, CIK) now use their Indian equivalents: SEBI IA Regulations (Reg 15, 17, 19), SID/KIM, the SEBI Mutual Funds master circular, and AMFI codes.
+- **Content:** example products, the firm, people and offices use our corpus (Parag Parikh Flexi Cap, PP Liquid, HSBC Value Fund, SEBI circulars), "VerifAI Demo Advisory", and Mumbai, Bengaluru, Delhi and Pune.
+- **Model and numbers:** the model is Gemini 3.1 Flash-Lite. The refusal threshold is 0.45 (PRD §6.2), with refusal scores moved below it. The corpus figures are our real 20 documents and 3,528 chunks.
+- **Fonts:** fonts missing in Figma were replaced by metric-compatible twins (Liberation Mono → Cousine, Nimbus Sans → Arimo, Liberation Serif → Tinos), so the file no longer shows missing-font warnings.
+
+Spec screen IDs map to the Figma screens like this:
+
+| Spec ID | Figma screen | Annotation prefix |
+|---|---|---|
+| S1 + S2 | Ask Assistant | A1 |
+| S3 | Evidence Dossier | A2 |
+| — (KPI dashboard) | Executive Overview | A3 |
+| S4 | Prospectus Vault | A4 |
+| S5 | Ingest & Certify | A5 |
+| S2c / S2d | Zero-Risk Guardrails | A6 |
+| — (thresholds and policy) | Governance Mandate | A7 |
+| S6 | Audit & Ledger Log | A8 |
 
 ## How to apply this in Figma
 

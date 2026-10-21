@@ -6,7 +6,7 @@
 | Squad / Team | 65 / 03 |
 | Version | v2.0 (revised after mentor review) |
 | Status | Resubmitted for approval |
-| Mock UX | [Figma — team03-sprint2-verifai](https://www.figma.com/design/7pcEIJXsNINuurET3JCF9y/team03-sprint2-verifai-?node-id=0-1) · annotation spec: [docs/MOCK_UX_ANNOTATIONS.md](docs/MOCK_UX_ANNOTATIONS.md) |
+| Mock UX | [Figma — team03-sprint2-verifai](https://www.figma.com/design/S3lVpz5bkKkSrrjuv9URYr/team03-sprint2-verifai-?node-id=0-1) · annotation spec: [docs/MOCK_UX_ANNOTATIONS.md](docs/MOCK_UX_ANNOTATIONS.md) |
 
 ### Revision log (response to review feedback)
 
