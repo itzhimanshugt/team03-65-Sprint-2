@@ -48,3 +48,5 @@ htmlcov/
 data/raw/*
 !data/raw/.gitkeep
 data/chroma/
+data/processed/*
+!data/processed/.gitkeep

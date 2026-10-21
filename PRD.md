@@ -128,18 +128,22 @@ One pull request per concept (§16). Several concepts are delivered per day.
 
 The firm's "approved document set" is simulated using publicly available Indian mutual-fund and regulatory documents. Each document is tagged as approved at ingestion by the compliance persona.
 
-| Category | Source (public) | # Docs | Format | Pages per doc | Date range |
+The full list with source URLs is in [`data/catalog.csv`](data/catalog.csv); `python -m scripts.download_corpus` re-creates `data/raw`.
+
+| Category | Source (public) | # Docs | Format | Pages / sections | Date range |
 |---|---|---|---|---|---|
-| Fund factsheets | Monthly factsheets published by 5 AMFI-registered AMCs on their websites | 15 | Text-based PDF | 2–60 | Jan–Sep 2026 |
-| Scheme disclosures | Scheme Information Documents (SID) and Key Information Memorandums (KIM) from the same AMCs | 10 | Text-based PDF | 20–150 | Latest version available |
-| Regulatory circulars | SEBI circulars on mutual funds and investment advisers (sebi.gov.in) | 15 | HTML or PDF | 3–40 | 2023–2026 |
-| Market research | AMC market outlook / commentary reports | 7 | Text-based PDF | 5–30 | Jan–Sep 2026 |
-| Internal notes | Firm FAQ / product notes written for the simulation | 3 | Markdown / TXT | 1–5 | Oct 2026 |
-| **Total** | | **50** | **4 formats** | **~1,500 pages (est.)** | |
+| Fund factsheets | HSBC MF and PPFAS MF monthly factsheets | 4 | PDF | 32–189 pages | Jul–Sep 2026 |
+| Scheme disclosures | SID and KIM of Parag Parikh Liquid Fund | 2 | PDF | 34–75 pages | Apr–Aug 2026 |
+| Regulatory circulars | SEBI master circulars (Mutual Funds; Investment Advisers ×2 versions) and 3 recent mutual-fund circulars | 6 | PDF | 2–748 pages | Jun 2025–Jul 2026 |
+| Investor education | SEBI investor-education and riskometer pages; AMC explainers on exit load, riskometer and ratios | 5 | HTML | 1–10 sections | 2020–2026 |
+| Internal notes | Firm FAQ, client-communication guidelines, product-shelf notes (**simulated**, fictional firm) | 3 | Markdown / TXT | 1–7 sections | Oct 2026 |
+| **Total** | | **20** | **4 formats** | **1,403 PDF pages + 41 sections (≈ 3.4M characters after cleaning)** | |
+
+The plan was 50 documents; 20 were kept because free-tier embedding quotas (§6.2) make a smaller corpus practical, and these 20 already cover every format, every document type and three version pairs. Four guessed scheme-document URLs (404), one site that blocks scripted downloads and one JavaScript-only page (no text in its HTML) were dropped.
 
 **Inclusion rules:** English only; PDF with selectable text, HTML, TXT or Markdown; ≤ 25 MB per file; publicly downloadable or written for the simulation.
-**Exclusion rules:** scanned/image-only PDFs, password-protected files, spreadsheets, non-English documents.
-**Versioning test:** at least 3 fund factsheets are included in two monthly versions (e.g. August and September) to test that answers cite the latest approved version.
+**Exclusion rules:** scanned/image-only PDFs, password-protected files, JavaScript-only pages, spreadsheets, non-English documents.
+**Versioning test:** three document families have two versions each: HSBC factsheet (Jul → Aug 2026), PPFAS factsheet (Aug → Sep 2026) and the SEBI Investment Advisers master circular (Jun 2025 → Feb 2026). Only the newer version is `is_latest`.
 
 ### 6.2 Processing parameters
 
@@ -158,7 +162,7 @@ The firm's "approved document set" is simulated using publicly available Indian 
 | Rate limits | Per-minute 429: wait the delay stated in Google's error message ("retry in Ns") and retry, max 3 times. Daily-quota 429 (delay over 90 s) or no stated delay: switch to the next fallback model; with none left, fail with the error | Keeps scripts running inside free-tier limits |
 | Output format | JSON `{answer, citations: [{n, chunk_id, source, page}], refused}` validated with Pydantic; one retry on invalid JSON | Reliable parsing for citation chips |
 | Vector database | ChromaDB (persistent, cosine distance) | Simple local setup, supports metadata filters |
-| Expected index size | ~4,000–5,000 chunks | ~1,500 pages × ~3 chunks/page |
+| Index size | **3,528 chunks** (measured, C14) | 20 documents chunked at 400 tokens with 60-token overlap |
 | Retrieval | Hybrid: vector top-20 + BM25 keyword top-20, merged with reciprocal rank fusion → re-rank → **top-5** to the LLM | Keyword search catches exact terms such as circular numbers and fund names |
 | Insufficient-evidence threshold | Refuse if best vector similarity < **0.45** (initial value, tuned against K5/K6) | Drives safe refusal |
 | Context budget | ≤ 3,000 tokens of retrieved context per answer | Keeps latency and cost bounded |
