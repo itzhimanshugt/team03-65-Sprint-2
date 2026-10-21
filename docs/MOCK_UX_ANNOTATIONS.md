@@ -14,6 +14,13 @@ The Figma file now contains everything this spec asks for:
 | **02 Empty & error states** | All 11 states below (S1a–S6a), in the file's visual style |
 | **03 User flow** | Advisor and compliance lanes with every screen, state and decision |
 
+Screen content was also aligned with the PRD, keeping the visual design:
+
+- **Regulation:** US references (FINRA 2111, SEC Reg BI, Form ADV, EDGAR, CIK) now use their Indian equivalents: SEBI IA Regulations (Reg 15, 17, 19), SID/KIM, the SEBI Mutual Funds master circular, and AMFI codes.
+- **Content:** example products, the firm, people and offices use our corpus (Parag Parikh Flexi Cap, PP Liquid, HSBC Value Fund, SEBI circulars), "VerifAI Demo Advisory", and Mumbai, Bengaluru, Delhi and Pune.
+- **Model and numbers:** the model is Gemini 3.1 Flash-Lite. The refusal threshold is 0.45 (PRD §6.2), with refusal scores moved below it. The corpus figures are our real 20 documents and 3,528 chunks.
+- **Fonts:** fonts missing in Figma were replaced by metric-compatible twins (Liberation Mono → Cousine, Nimbus Sans → Arimo, Liberation Serif → Tinos), so the file no longer shows missing-font warnings.
+
 Spec screen IDs map to the Figma screens like this:
 
 | Spec ID | Figma screen | Annotation prefix |
