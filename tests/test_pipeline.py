@@ -32,3 +32,16 @@ def test_weak_evidence_refuses_without_calling_llm():
 
     out = answer("x", retrieve=lambda q: [hit("a", 0.2)], generate=generate, threshold=0.5)
     assert out.refused and out.text == NO_EVIDENCE and out.sources == []
+
+
+def test_grounding_rules_reach_the_llm():
+    seen = {}
+    answer(
+        "exit load?",
+        retrieve=lambda q: [hit("a", 0.9)],
+        generate=lambda m: seen.setdefault("m", m) and "ok",
+        threshold=0.5,
+    )
+    system, user = seen["m"]
+    assert "Do not use outside knowledge" in system["content"]
+    assert "Answer only from the context above" in user["content"]
