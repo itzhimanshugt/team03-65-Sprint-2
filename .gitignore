@@ -50,3 +50,4 @@ data/raw/*
 data/chroma/
 data/processed/*
 !data/processed/.gitkeep
+data/logs/

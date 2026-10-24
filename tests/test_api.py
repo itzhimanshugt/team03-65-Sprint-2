@@ -44,3 +44,23 @@ def test_endpoints(monkeypatch):
     )
     assert client.post("/chat", json={"question": ""}).status_code == 422
     assert "/chat" in client.get("/openapi.json").json()["paths"]
+
+
+def test_repeat_question_served_from_cache(monkeypatch, tmp_path):
+    import app.observability as obs
+
+    log = tmp_path / "log.jsonl"
+    monkeypatch.setattr(obs, "LOG", log)
+    monkeypatch.setattr(api, "log_request", lambda e: obs.log_request(e, log))
+    monkeypatch.setattr(api, "stats", lambda: obs.stats(log))
+    monkeypatch.setattr(api, "CACHE", obs.QueryCache())
+    calls = []
+    monkeypatch.setattr(
+        api, "answer", lambda q, retrieve: calls.append(q) or Answer("no", refusal="no_evidence")
+    )
+    client = TestClient(api.app)
+    for _ in range(2):
+        client.post("/chat", json={"question": "Unknown thing?"})
+    assert len(calls) == 1
+    s = client.get("/stats").json()
+    assert s["requests"] == 2 and s["cache_hits"] == 1 and s["refusals"] == 2
