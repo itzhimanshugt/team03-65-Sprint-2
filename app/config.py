@@ -48,5 +48,5 @@ def get_settings() -> Settings:
         chunk_size=int(os.getenv("CHUNK_SIZE", "400")),
         chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "60")),
         top_k=int(os.getenv("TOP_K", "5")),
-        refusal_threshold=float(os.getenv("REFUSAL_THRESHOLD", "0.45")),
+        refusal_threshold=float(os.getenv("REFUSAL_THRESHOLD", "0.72")),
     )

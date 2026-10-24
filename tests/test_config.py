@@ -14,7 +14,7 @@ def test_defaults_match_prd(monkeypatch):
         monkeypatch.delenv(var, raising=False)
     s = get_settings()
     assert (s.chunk_size, s.chunk_overlap, s.top_k) == (400, 60, 5)
-    assert s.refusal_threshold == 0.45
+    assert s.refusal_threshold == 0.72  # tuned in C25
     assert s.embedding_model == "gemini-embedding-001"
     assert s.llm_model == "gemini-3.1-flash-lite"
     assert s.llm_fallback_models[0] == "gemini-2.5-flash-lite"
