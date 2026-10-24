@@ -10,7 +10,7 @@ factsheets, and regulatory disclosures.
 
 ## Live demo
 
-**Demo:** _URL added after deployment. See [docs/DEPLOY.md](docs/DEPLOY.md)._
+**Demo:** _URL added after deployment. Free deploy on Render: [docs/DEPLOY.md](docs/DEPLOY.md)._
 
 ## Quick start
 
