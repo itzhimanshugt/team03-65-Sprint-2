@@ -1,6 +1,8 @@
 """Turn text into embedding vectors with an OpenAI-compatible embeddings API."""
 
+import json
 import math
+from pathlib import Path
 
 from openai import OpenAI
 
@@ -34,3 +36,25 @@ def embed_texts(texts: list[str], client: OpenAI | None = None) -> list[list[flo
     # Truncated Gemini embeddings (< 3072 dims) are not unit-length; normalise so cosine,
     # dot product and Euclidean distance all rank the same way.
     return [[x / n for x in v] if (n := math.sqrt(sum(x * x for x in v))) else v for v in vectors]
+
+
+QUERY_CACHE = Path("data/processed/query_cache.json")
+
+
+def embed_cached(
+    texts: list[str], path: Path = QUERY_CACHE, embed=embed_texts
+) -> list[list[float]]:
+    """embed_texts with a disk cache keyed by model, dimension and text.
+
+    Questions repeat across demos and eval runs; on the free tier every embedding is a request.
+    """
+    settings = get_settings()
+    cache = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    key = [f"{settings.embedding_model}|{settings.embedding_dimensions}|{t}" for t in texts]
+    missing = [t for t, k in zip(texts, key, strict=True) if k not in cache]
+    if missing:
+        for t, v in zip(missing, embed(missing), strict=True):
+            cache[f"{settings.embedding_model}|{settings.embedding_dimensions}|{t}"] = v
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(cache), encoding="utf-8")
+    return [cache[k] for k in key]

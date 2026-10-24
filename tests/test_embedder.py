@@ -58,3 +58,18 @@ def test_vectors_are_unit_length():
     v2 = embed_texts(["a", "b"], client=FakeEmbeddings())[1]
     assert math.isclose(sum(x * x for x in v2), 1.0)
     assert v == [0.0] * 768  # zero vector stays zero instead of dividing by 0
+
+
+def test_embed_cached_only_calls_api_for_new_texts(tmp_path):
+    from embeddings.embedder import embed_cached
+
+    calls = []
+
+    def fake(texts):
+        calls.append(list(texts))
+        return [[float(len(t))] for t in texts]
+
+    path = tmp_path / "q.json"
+    assert embed_cached(["ab", "c"], path, fake) == [[2.0], [1.0]]
+    assert embed_cached(["c", "xyz"], path, fake) == [[1.0], [3.0]]
+    assert calls == [["ab", "c"], ["xyz"]]

@@ -9,7 +9,7 @@ import re
 from collections import Counter
 
 from app.config import get_settings
-from embeddings.embedder import embed_texts
+from embeddings.embedder import embed_cached
 from retrieval.search import LATEST_ONLY, Hit, search
 from retrieval.vector_store import get_collection
 
@@ -49,7 +49,7 @@ def hybrid_search(
     k: int | None = None,
     where: dict | None = LATEST_ONLY,
     collection=None,
-    embed=embed_texts,
+    embed=embed_cached,
     pool: int = 30,
 ) -> list[Hit]:
     """Top-`k` chunks by RRF of the vector top-`pool` and the BM25 top-`pool`."""
