@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from app.config import get_settings
 from app.llm import complete
 from app.prompting import build_messages, load_system_prompt, render_prompt
-from app.tokens import count_tokens
+from rag.context import assemble_context
 from retrieval.search import Hit, search
 
 Retrieve = Callable[[str], list[Hit]]
@@ -18,7 +18,6 @@ Rerank = Callable[[str, list[Hit]], list[Hit]]
 Generate = Callable[[list[dict]], str]
 
 NO_EVIDENCE = "I couldn't find this in the approved documents."
-CONTEXT_TOKEN_BUDGET = 3000  # PRD §8: assembled context stays under ~3k tokens
 
 
 @dataclass
@@ -26,20 +25,6 @@ class Answer:
     text: str
     sources: list[Hit] = field(default_factory=list)  # numbered [1], [2], … in the prompt
     refused: bool = False
-
-
-def assemble_context(hits: list[Hit], budget: int = CONTEXT_TOKEN_BUDGET) -> tuple[str, list[Hit]]:
-    """Number the chunks [1], [2], … in rank order, stopping before the token budget runs out."""
-    blocks, used, total = [], [], 0
-    for hit in hits:
-        block = f"[{len(used) + 1}] ({hit.citation})\n{hit.text}"
-        cost = count_tokens(block)
-        if total + cost > budget:
-            break
-        blocks.append(block)
-        used.append(hit)
-        total += cost
-    return "\n\n".join(blocks), used
 
 
 def default_generate(messages: list[dict]) -> str:
