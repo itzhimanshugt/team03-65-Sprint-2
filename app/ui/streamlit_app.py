@@ -70,3 +70,4 @@ if question := st.chat_input("Ask about a fund, circular or firm policy"):
             st.stop()
         show(r["answer"], r["citations"], r["refusal"])
     st.session_state.turns.append((question, r["answer"], r["citations"], r["refusal"]))
+    st.rerun()  # redraw from history so the empty state (S1a) disappears
