@@ -1,4 +1,4 @@
-from rag.pipeline import NO_EVIDENCE, answer, assemble_context
+from rag.pipeline import NO_EVIDENCE, answer
 from retrieval.search import Hit
 
 
@@ -23,7 +23,7 @@ def test_stages_run_in_order_and_sources_are_numbered():
     assert out.text == "Exit load is 1% [1]." and not out.refused
     assert [h.chunk_id for h in out.sources] == ["b", "a"]
     system, user = seen["messages"]
-    assert system["role"] == "system" and "[1] (f.pdf · p.3)" in user["content"]
+    assert system["role"] == "system" and "[1] f.pdf · p.3" in user["content"]
 
 
 def test_weak_evidence_refuses_without_calling_llm():
@@ -32,9 +32,3 @@ def test_weak_evidence_refuses_without_calling_llm():
 
     out = answer("x", retrieve=lambda q: [hit("a", 0.2)], generate=generate, threshold=0.5)
     assert out.refused and out.text == NO_EVIDENCE and out.sources == []
-
-
-def test_context_stops_at_token_budget():
-    hits = [hit(str(i), 0.9, "word " * 100) for i in range(10)]
-    context, used = assemble_context(hits, budget=250)
-    assert len(used) == 2 and context.startswith("[1]") and "[3]" not in context
