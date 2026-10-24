@@ -34,8 +34,11 @@ def verify_index(collection, records, ids, vectors, samples: int = 25, seed: int
     docs = dict(zip(got["ids"], got["documents"], strict=True))
     self_hits = 0
     for i in picks:
-        hit = collection.query(query_embeddings=[vectors[i].tolist()], n_results=1)
-        self_hits += hit["ids"][0][0] == ids[i]
+        hit = collection.query(
+            query_embeddings=[vectors[i].tolist()], n_results=1, include=["distances"]
+        )
+        # An identical twin (same text in two versions of a document) is an equally correct hit.
+        self_hits += hit["ids"][0][0] == ids[i] or hit["distances"][0][0] < 1e-6
     return {
         "indexed rows = cached vectors": collection.count() == len(ids),
         "every chunk with a vector is indexed": len(collection.get(ids=ids, include=[])["ids"])
