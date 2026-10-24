@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from app.config import get_settings
-from embeddings.embedder import embed_texts
+from embeddings.embedder import embed_cached
 from retrieval.vector_store import get_collection
 
 LATEST_ONLY = {"is_latest": True}  # PRD FR-9: superseded versions are excluded by default
@@ -26,7 +26,7 @@ def search(
     k: int | None = None,
     where: dict | None = LATEST_ONLY,
     collection=None,
-    embed=embed_texts,
+    embed=embed_cached,
 ) -> list[Hit]:
     """Top-`k` chunks for `question`, most similar first; where=None searches every version."""
     collection = collection or get_collection()
