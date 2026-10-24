@@ -5,6 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY --chown=user . .
+RUN mkdir -p outputs data/logs && chown -R user:user /app  # boot writes the index, logs and reports
 USER user
 EXPOSE 7860
 CMD ["sh", "start.sh"]
