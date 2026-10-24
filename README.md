@@ -8,6 +8,59 @@ factsheets, and regulatory disclosures.
 > information from approved documents. It is not a substitute for
 > professional compliance review or independent financial/legal advice.
 
+## Submission links (Sprint 2)
+
+| Piece | Where |
+|---|---|
+| Pull requests | [All merged PRs](https://github.com/itzhimanshugt/team03-65-Sprint-2/pulls?q=is%3Apr+is%3Amerged): one PR per concept (C1–C40), each with "What this PR covers" and walkthrough notes |
+| PRD | [PRD.md](PRD.md): problem, users, knowledge source, KPIs, evaluation set |
+| Mock UX | [Figma file](https://www.figma.com/design/S3lVpz5bkKkSrrjuv9URYr/team03-sprint2-verifai-?node-id=0-1) · annotations and empty states in [docs/MOCK_UX_ANNOTATIONS.md](docs/MOCK_UX_ANNOTATIONS.md) · built screens in [docs/screenshots](docs/screenshots) |
+| Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Live app | https://verifai-vysj.onrender.com |
+| Board | [Sprint 2 project board](https://github.com/users/itzhimanshugt/projects/2) |
+
+## RAG pipeline at a glance
+
+```text
+Documents ──► Chunk ──► Embed ──► Vector DB ──► Retrieve ──► LLM answer
+ 20 approved   400-token   gemini-        ChromaDB     top-20 → re-rank   Gemini (free tier),
+ PDF/HTML/     chunks, 60  embedding-001  (cosine,     → top-5 → same-     answers only from the
+ MD/TXT files  overlap,    768-D,         HNSW)        page neighbours     numbered context, with
+               metadata    L2-normalised               + evidence gate     [n] citations
+```
+
+| Stage | Code | Output |
+|---|---|---|
+| Load + clean | `ingestion/loaders.py`, `ingestion/cleaner.py` | plain text per page/section, boilerplate removed |
+| Chunk + metadata | `ingestion/chunker.py`, `ingestion/metadata.py` | `data/processed/chunks.jsonl` (3,528 chunks) |
+| Embed | `embeddings/embedder.py`, `embeddings/batch.py` | `data/processed/embeddings.npy` (resumable cache) |
+| Index | `retrieval/vector_store.py`, `retrieval/indexer.py` | ChromaDB at `data/chroma` |
+| Retrieve | `retrieval/search.py`, `retrieval/reranker.py`, `retrieval/neighbours.py` | top-5 cited chunks |
+| Answer | `rag/pipeline.py`, `rag/context.py`, `rag/citations.py`, `rag/guardrails.py`, `rag/conversation.py` | grounded answer + citations, or a refusal |
+| Serve | `app/api/main.py` (FastAPI), `app/ui/streamlit_app.py` (Streamlit) | API + chat UI |
+
+## Data source
+
+The knowledge base is **20 approved documents** listed in [data/catalog.csv](data/catalog.csv), with each document's type, issuer, title, publish date and version. They are fetched with `python -m scripts.download_corpus`.
+
+| Type | Documents |
+|---|---|
+| Fund factsheets | HSBC MF (Jul + Aug 2026), PPFAS MF (Aug + Sep 2026) |
+| Scheme documents | Parag Parikh Liquid Fund SID and KIM |
+| SEBI circulars | Master Circular for MFs (Mar 2026), Master Circular for Investment Advisers (Jun 2025 + Feb 2026), 3 circulars from Jul 2026 (intraday borrowing, SWP/STP in demat, SIF distribution) |
+| Investor education | SEBI (mutual funds, riskometer), Tata MF (riskometer), Motilal Oswal (exit load), Zerodha (ratios) |
+| Firm internal (simulated) | Advisor FAQ, client communication guidelines, product shelf notes |
+
+**Versions:** older versions (Jul HSBC, Aug PPFAS, Jun 2025 IA circular) are kept with `is_latest=false` and excluded from retrieval by default.
+
+## Embeddings
+
+- **Model:** `gemini-embedding-001` through Gemini's OpenAI-compatible endpoint, 768 dimensions, L2-normalised (so cosine, dot product and Euclidean distance rank the same).
+- **Batching:** at most 100 chunks or 8,000 tokens per request, with rate-limit retries.
+- **Resumable cache:** a run stopped by the free tier's daily quota (~1,000 chunks) loses nothing.
+- **Question cache:** question embeddings are cached on disk, so evaluation reruns cost no quota.
+- **Sanity checks:** `python -m scripts.embedding_sanity`, reported in `outputs/c20/sanity.md`.
+
 ## Live demo
 
 **Demo:** https://verifai-vysj.onrender.com (free Render plan: first load after idle takes ~30–60 s). Deploy steps: [docs/DEPLOY.md](docs/DEPLOY.md).
@@ -111,43 +164,20 @@ base.
 12. Display citations.
 13. Refuse or ask for clarification when evidence is insufficient.
 
-## Recommended Project Structure
+## Project Structure
 
-``` text
-financial-compliance-rag/
-├── app/
-│   ├── api/
-│   ├── ui/
-│   └── main.py
-├── ingestion/
-│   ├── loaders.py
-│   ├── cleaner.py
-│   ├── chunker.py
-│   └── metadata.py
-├── embeddings/
-│   ├── embedder.py
-│   └── batch.py
-├── retrieval/
-│   ├── vector_store.py
-│   ├── search.py
-│   ├── filters.py
-│   └── reranker.py
-├── rag/
-│   ├── pipeline.py
-│   ├── prompts.py
-│   ├── citations.py
-│   └── guardrails.py
-├── evaluation/
-├── prompts/          # reusable prompt templates
-├── outputs/          # eval reports, experiment results
-├── tests/
-├── data/
-│   ├── raw/
-│   └── processed/
-├── .env.example
-├── .gitignore
-├── requirements.txt
-└── README.md
+```text
+app/          config, LLM client, prompts, tokens, history, observability; api/ (FastAPI), ui/ (Streamlit)
+ingestion/    loaders, cleaner, chunker, metadata, pipeline, upload
+embeddings/   embedder (+ question cache), batch, similarity, sanity
+retrieval/    vector_store, indexer, search, hybrid, reranker, neighbours
+rag/          pipeline, context, citations, guardrails, conversation
+evaluation/   eval_set.jsonl (40 labelled questions), retrieval_eval, answer_eval
+prompts/      system, answer, condense templates
+scripts/      one runnable script per step and demo (outputs go to outputs/cNN/)
+outputs/      evidence for each concept
+docs/         ARCHITECTURE, MOCK_UX_ANNOTATIONS, DEPLOY, screenshots
+tests/        ~125 offline tests
 ```
 
 ## Environment Setup
@@ -180,25 +210,23 @@ All settings, with defaults, are in [.env.example](.env.example). Only `LLM_API_
 
 ## Retrieval
 
-The retrieval flow is:
+`rag.pipeline.answer()` retrieves in these steps:
 
-``` text
-Question
+```text
+Question (follow-ups rewritten into a standalone question from the last 4 turns)
+  ↓  embed (cached)
+Vector search in ChromaDB: top-20, metadata filter (latest version by default; optional issuer / doc_type)
   ↓
-Query Embedding
+Lexical re-rank → top-5 (bonus for question words, strongest when they appear in the chunk's first tokens)
   ↓
-Vector Similarity Search
+Evidence gate: refuse if the best cosine score is below 0.72
   ↓
-Top-K Candidates
+Same-page neighbours: the next chunk of each top-3 hit, so facts split across a boundary stay whole
   ↓
-Metadata Filtering
-  ↓
-Optional Re-ranking
-  ↓
-Relevant Context
+Numbered context [1]…[k] with source, page and date, at most 3,000 tokens → LLM
 ```
 
-Retrieved chunks must retain enough metadata to generate citations.
+Hybrid search (BM25 + RRF, `retrieval/hybrid.py`) was built and evaluated, but it scored lower on this corpus (Recall@5 0.57 vs 0.83), so vector search plus re-ranking is the default. See `outputs/c27`.
 
 ## Vector Store
 
