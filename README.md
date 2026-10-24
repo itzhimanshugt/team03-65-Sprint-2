@@ -10,7 +10,9 @@ factsheets, and regulatory disclosures.
 
 ## Live demo
 
-**Demo:** _URL added after deployment. Free deploy on Render: [docs/DEPLOY.md](docs/DEPLOY.md)._
+**Demo:** https://verifai-vysj.onrender.com (free Render plan: first load after idle takes ~30–60 s). Deploy steps: [docs/DEPLOY.md](docs/DEPLOY.md).
+
+![Live demo](docs/screenshots/live-render.jpg)
 
 ## Quick start
 
