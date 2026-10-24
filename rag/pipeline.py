@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from app.config import get_settings
 from app.llm import complete
 from app.prompting import build_messages, load_system_prompt, render_prompt
+from rag.citations import Citation, resolve_citations
 from rag.context import assemble_context
 from retrieval.search import Hit, search
 
@@ -25,6 +26,7 @@ class Answer:
     text: str
     sources: list[Hit] = field(default_factory=list)  # numbered [1], [2], … in the prompt
     refused: bool = False
+    citations: list[Citation] = field(default_factory=list)  # only markers that resolve
 
 
 def default_generate(messages: list[dict]) -> str:
@@ -46,4 +48,5 @@ def answer(
     messages = build_messages(
         render_prompt("answer", context=context, question=question), load_system_prompt()
     )
-    return Answer(generate(messages), sources=used)
+    text, citations = resolve_citations(generate(messages), used)
+    return Answer(text, sources=used, citations=citations)
