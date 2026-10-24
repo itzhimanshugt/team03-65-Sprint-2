@@ -8,6 +8,36 @@ factsheets, and regulatory disclosures.
 > information from approved documents. It is not a substitute for
 > professional compliance review or independent financial/legal advice.
 
+## Live demo
+
+**Demo:** _URL added after deployment. See [docs/DEPLOY.md](docs/DEPLOY.md)._
+
+## Quick start
+
+```bash
+pip install -r requirements-dev.txt
+cp .env.example .env                      # add your free Gemini key as LLM_API_KEY
+python -m scripts.download_corpus         # approved sample documents → data/raw
+python -m scripts.ingest_corpus           # load → clean → chunk → metadata
+python -m scripts.embed_corpus            # resumable; the free tier allows ~1,000 chunks/day
+python -m scripts.build_index             # ChromaDB at data/chroma
+uvicorn app.api.main:app --reload         # API + Swagger at http://localhost:8000/docs
+streamlit run app/ui/streamlit_app.py     # chat UI at http://localhost:8501
+```
+
+Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · PRD: [PRD.md](PRD.md) · Mock UX: [docs/MOCK_UX_ANNOTATIONS.md](docs/MOCK_UX_ANNOTATIONS.md)
+
+## API
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /chat` | Cited answer, refusal flag, citations with chunk text (filters: issuer, doc_type) |
+| `POST /chat/stream` | Same answer as server-sent events: `token`… then `done` with citations |
+| `POST /documents` | Upload PDF/HTML/TXT/MD → index (duplicates rejected, new versions supersede old ones) |
+| `GET /documents` | Indexed documents with version and `is_latest` |
+| `GET /stats` | Requests, cache hits, refusals, p95 latency |
+| `GET /health` | Status and number of chunks indexed |
+
 ## Problem Statement
 
 A financial advisory firm maintains market research, fund factsheets,
@@ -144,16 +174,7 @@ pip install -r requirements-dev.txt   # app + test/lint tools
 
 ## Environment Variables
 
-Use a local `.env` file for secrets:
-
-``` env
-LLM_API_KEY=your_api_key_here
-VECTOR_DB_URL=your_vector_database_url
-VECTOR_DB_API_KEY=your_vector_database_key
-```
-
-Never commit `.env`. Use `.env.example` to document variable names
-without real credentials.
+All settings, with defaults, are in [.env.example](.env.example). Only `LLM_API_KEY` is secret. The defaults use Google Gemini's free tier through its OpenAI-compatible endpoint.
 
 ## Retrieval
 
@@ -195,9 +216,12 @@ Metadata keeps everything needed to **cite** (source, page, version) and to **fi
 
 ## Grounded Generation
 
-The generation layer should: - Answer from retrieved evidence. - Avoid
-unsupported claims. - Include source references. - Respect context
-limits. - Refuse or request clarification when evidence is insufficient.
+`rag/pipeline.py` runs **retrieve (vector top-20) → re-rank → top-5 → evidence gate → numbered context (≤ 3k tokens) → LLM → citation check**.
+
+- **Weak evidence** (top cosine < 0.72) → refusal before any LLM call (Mock UX S2c).
+- **Advice-seeking** questions → a non-advice notice plus facts (S2d).
+- **Follow-ups** are rewritten into standalone questions from the last 4 turns.
+- **`[n]` markers** that point to sources the model was not shown are dropped.
 
 **Design principle:**
 
@@ -205,13 +229,14 @@ limits. - Refuse or request clarification when evidence is insufficient.
 
 ## Evaluation
 
-Evaluate retrieval using representative questions and a labelled set of
-expected relevant chunks.
+The labelled set is [evaluation/eval_set.jsonl](evaluation/eval_set.jsonl): 40 questions (25 factual, 5 multi-document, 6 unanswerable, 4 advice).
 
-Measure: - Recall - Precision - Retrieval relevance
-
-Evaluate generated answers for: - Correctness - Grounding - Citation
-quality - Refusal behavior
+```bash
+python -m scripts.retrieval_eval   # K1/K2 → outputs/c27
+python -m scripts.tune_retrieval   # k and threshold grid → outputs/c25
+python -m scripts.rerank_eval      # with / without re-ranking → outputs/c26
+python -m scripts.answer_eval      # 40 questions end to end, K5/K6/K8 + K3/K4 review sheet → outputs/c34
+```
 
 ## Security
 
@@ -225,13 +250,12 @@ Never commit API keys or expose them in logs.
 
 ## Testing
 
-``` bash
-pytest
+```bash
+pytest        # ~120 offline tests: no API calls (LLM, embeddings and vector store are faked)
+ruff check .
 ```
 
-Tests should cover document loading, cleaning, chunking, metadata,
-embeddings, retrieval, RAG generation, citations, guardrails, and API
-endpoints as those components are implemented.
+CI runs ruff, pytest and gitleaks on every PR.
 
 ## GitHub Workflow
 
@@ -252,21 +276,25 @@ git push -u origin feature/document-ingestion
 
 ## Sprint 2 Status
 
-**Status: In Development**
+**Status:** all 40 concepts are implemented, one PR each. Results from the final evaluation run (24 Oct 2026, 2,824 of 3,528 chunks indexed, all 20 documents):
 
-Current focus: - Problem understanding - PRD - Mock UX -
-Repository/workflow setup - RAG architecture planning
-
-Upcoming: - Document ingestion - Chunking - Embeddings - Vector
-database - Retrieval - Grounded generation - API/UI integration -
-Evaluation - Deployment
+| KPI | Target | Result |
+|---|---|---|
+| K1 Recall@5 | ≥ 0.85 | 0.83 (vector; unchanged by re-ranking) |
+| K2 MRR@5 | ≥ 0.70 | **0.79** with re-ranking ✅ |
+| K3 Citation accuracy | ≥ 90% | Manual review sheet: `outputs/c34/review_sheet.md` |
+| K4 Hallucination rate | ≤ 5% | 0 invented facts in the spot check; 1 weak citation |
+| K5 Correct refusals | ≥ 90% | **90%** ✅ |
+| K6 False refusals | ≤ 10% | **0%** ✅ |
+| K8 Latency | p95 ≤ 8 s; first token ≤ 2 s | p95 15.7 s (non-streamed eval); first token 2.2–4.6 s ❌ (free-tier model) |
+| — Answer spot check | — | 28 / 30 answerable questions correct and complete |
 
 ## Limitations
 
-The quality of the system depends on the completeness and quality of the
-approved source documents. Poor documents, weak chunking, embedding
-limitations, or missing evidence can reduce retrieval quality. The
-system cannot independently guarantee legal or regulatory compliance.
+- **Free tier:** about 1,000 embeddings a day, so 704 chunks of the SEBI MF Master Circular are still waiting to be embedded. Free-tier latency also misses the K8 target.
+- **Hybrid search:** BM25 + RRF scored lower than vector search on this corpus, because factsheets repeat fund-type words on every page. The lexical re-ranker is used instead.
+- **Images:** riskometer dials and other images in PDFs are not read. Answers rely on the text near them.
+- Quality depends on the approved documents. The system cannot guarantee legal or regulatory compliance.
 
 ## Team
 
