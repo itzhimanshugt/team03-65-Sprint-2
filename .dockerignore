@@ -4,6 +4,7 @@
 venv
 __pycache__
 data/chroma
+data/processed/query_cache.json
 data/logs
 data/raw
 outputs

@@ -50,4 +50,8 @@ data/raw/*
 data/chroma/
 data/processed/*
 !data/processed/.gitkeep
+# Shipped so a deploy can build the index without embedding API calls (C40)
+!data/processed/chunks.jsonl
+!data/processed/embeddings.npy
+!data/processed/embedding_ids.json
 data/logs/

@@ -1,0 +1,13 @@
+# Render Blueprint: one free Docker web service (API + Streamlit UI in one container).
+services:
+  - type: web
+    name: verifai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: LLM_API_KEY
+        sync: false  # entered in the Render dashboard, never committed
+      - key: REFUSAL_THRESHOLD
+        value: "0.72"
