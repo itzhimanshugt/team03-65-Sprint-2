@@ -1,8 +1,15 @@
 """VerifAI HTTP API. Run: uvicorn app.api.main:app --reload  (Swagger docs at /docs)."""
 
-from fastapi import FastAPI
+import shutil
+import tempfile
+from datetime import date
+from pathlib import Path
+from typing import Literal
+
+from fastapi import FastAPI, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
+from ingestion.upload import UploadError, index_upload
 from rag.conversation import condense
 from rag.pipeline import answer
 from retrieval.hybrid import build_where
@@ -82,3 +89,41 @@ def documents() -> list[DocumentOut]:
         )
         d["chunks"] += 1
     return [DocumentOut(**d) for d in sorted(docs.values(), key=lambda d: d["source_name"])]
+
+
+class UploadOut(BaseModel):
+    doc_id: str
+    status: str
+    chunks: int
+    superseded_chunks: int
+
+
+@app.post("/documents", response_model=UploadOut, status_code=201)
+def upload_document(
+    file: UploadFile,
+    title: str = Form(...),
+    doc_type: Literal["factsheet", "sid_kim", "circular", "research", "internal"] = Form(...),
+    issuer: str = Form(...),
+    family: str = Form(..., description="Versions of one document share a family"),
+    published_date: date = Form(...),  # noqa: B008
+    version: int = Form(1, ge=1),
+) -> UploadOut:
+    entry = {
+        "title": title,
+        "doc_type": doc_type,
+        "issuer": issuer,
+        "family": family,
+        "published_date": published_date.isoformat(),
+        "version": version,
+    }
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / Path(file.filename or "upload").name
+        with path.open("wb") as out:
+            shutil.copyfileobj(file.file, out)
+        try:
+            r = index_upload(path, entry, get_collection())
+        except UploadError as error:
+            raise HTTPException(error.status, str(error)) from error
+    return UploadOut(
+        doc_id=r.doc_id, status="Indexed", chunks=r.chunks, superseded_chunks=r.superseded
+    )
