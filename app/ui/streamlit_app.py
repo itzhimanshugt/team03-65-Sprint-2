@@ -1,5 +1,6 @@
 """VerifAI chat UI. Run the API first, then: streamlit run app/ui/streamlit_app.py"""
 
+import json
 import os
 
 import httpx
@@ -60,14 +61,35 @@ if question := st.chat_input("Ask about a fund, circular or firm policy"):
         "doc_type": None if doc_type == "Any" else doc_type,
     }
     with st.chat_message("assistant"):
+        done: dict = {}
+
+        def tokens():  # US-08: render the answer as it streams (POST /chat/stream, SSE)
+            with httpx.stream("POST", f"{API}/chat/stream", json=body, timeout=60) as resp:
+                resp.raise_for_status()
+                event = None
+                for line in resp.iter_lines():
+                    if line.startswith("event: "):
+                        event = line[7:]
+                    elif line.startswith("data: "):
+                        data = json.loads(line[6:])
+                        if event == "token":
+                            yield data
+                        elif event == "done":
+                            done.update(data)
+                        elif event == "error":
+                            raise httpx.HTTPError(data["message"])
+
         try:
-            with st.spinner("Checking the approved documents…"):
-                r = httpx.post(f"{API}/chat", json=body, timeout=60).raise_for_status().json()
+            placeholder = st.empty()
+            with placeholder.container():
+                st.write_stream(tokens())
         except httpx.HTTPError:  # Mock UX S2e
             st.error(
                 "Something went wrong. The answer couldn't be generated. Your question is saved."
             )
             st.stop()
+        placeholder.empty()  # replace the raw stream with the final answer + citation chips
+        r = done
         show(r["answer"], r["citations"], r["refusal"])
     st.session_state.turns.append((question, r["answer"], r["citations"], r["refusal"]))
     st.rerun()  # redraw from history so the empty state (S1a) disappears

@@ -1,3 +1,5 @@
+import json
+
 from streamlit.testing.v1 import AppTest
 
 APP = "app/ui/streamlit_app.py"
@@ -11,21 +13,31 @@ CITE = {
 }
 
 
-class FakeResponse:
+class FakeStream:
     def __init__(self, body):
-        self.body = body
+        words = body["answer"].split(" ") if not body["refusal"] else []
+        self.lines = []
+        for w in words:
+            self.lines += ["event: token", "data: " + json.dumps(w + " "), ""]
+        self.lines += ["event: done", "data: " + json.dumps(body), ""]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
 
     def raise_for_status(self):
         return self
 
-    def json(self):
-        return self.body
+    def iter_lines(self):
+        return iter(self.lines)
 
 
 def run(monkeypatch, body, question="Exit load?"):
     import httpx
 
-    monkeypatch.setattr(httpx, "post", lambda *a, **k: FakeResponse(body))
+    monkeypatch.setattr(httpx, "stream", lambda *a, **k: FakeStream(body))
     at = AppTest.from_file(APP, default_timeout=30).run()
     at.chat_input[0].set_value(question).run()
     return at

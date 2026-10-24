@@ -86,3 +86,23 @@ def complete(messages: list[dict], client: OpenAI | None = None, **params) -> Co
         completion_tokens=usage.completion_tokens if usage else 0,
         finish_reason=response.choices[0].finish_reason or "",
     )
+
+
+def stream_complete(messages: list[dict], client: OpenAI | None = None, **params):
+    """Yield the reply text piece by piece as the model produces it (same defaults as complete)."""
+    settings = get_settings()
+    client = client or get_client(settings)
+    request = {
+        "model": settings.llm_model,
+        "temperature": settings.llm_temperature,
+        "max_tokens": settings.llm_max_tokens,
+        **(
+            {"reasoning_effort": settings.llm_reasoning_effort}
+            if settings.llm_reasoning_effort
+            else {}
+        ),
+        **params,
+    }
+    for chunk in client.chat.completions.create(messages=messages, stream=True, **request):
+        if chunk.choices and (piece := chunk.choices[0].delta.content):
+            yield piece

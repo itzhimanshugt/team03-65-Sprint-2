@@ -86,3 +86,23 @@ def test_upload_clears_query_cache(monkeypatch):
         },
     )
     assert r.status_code == 201 and api.CACHE.get("k") is None
+
+
+def test_chat_stream_sends_tokens_then_citations(monkeypatch, tmp_path):
+    import app.observability as obs
+
+    monkeypatch.setattr(api, "log_request", lambda e: obs.log_request(e, tmp_path / "l.jsonl"))
+    monkeypatch.setattr(api, "condense", lambda q, h: q)
+    hit = Hit("c1", "Exit load 1%.", 0.9, {})
+
+    def fake_answer(q, retrieve, generate):
+        text = generate([])
+        return Answer(text, [hit], None, [Citation(1, "f.pdf", 3, "F", "c1")])
+
+    monkeypatch.setattr(api, "answer", fake_answer)
+    monkeypatch.setattr(api, "stream_complete", lambda m: iter(["It is ", "1% [1]."]))
+    body = TestClient(api.app).post("/chat/stream", json={"question": "Exit load of F?"}).text
+    assert body.count("event: token") == 2 and body.index("event: token") < body.index(
+        "event: done"
+    )
+    assert '"chunk_id": "c1"' in body and '"answer": "It is 1% [1]."' in body

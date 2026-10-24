@@ -1,15 +1,20 @@
 """VerifAI HTTP API. Run: uvicorn app.api.main:app --reload  (Swagger docs at /docs)."""
 
+import json
+import queue
 import shutil
 import tempfile
+import threading
 import time
 from datetime import date
 from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, Form, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from app.llm import stream_complete
 from app.observability import QueryCache, cache_key, log_request, stats
 from ingestion.upload import UploadError, index_upload
 from rag.conversation import condense
@@ -111,6 +116,73 @@ def chat(req: ChatRequest) -> ChatResponse:
         }
     )
     return resp
+
+
+def sse(event: str, data) -> str:
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+@app.post("/chat/stream")
+def chat_stream(req: ChatRequest) -> StreamingResponse:
+    """Server-sent events: `token` events as the answer streams, then one `done` with citations."""
+    start = time.perf_counter()
+    filters = {k: v for k, v in (("issuer", req.issuer), ("doc_type", req.doc_type)) if v}
+    question = condense(req.question, req.history)
+    where = build_where(**filters)
+    tokens: queue.Queue = queue.Queue()
+    result: dict = {}
+
+    def generate(messages: list[dict]) -> str:
+        parts = []
+        for piece in stream_complete(messages):
+            parts.append(piece)
+            tokens.put(piece)
+        return "".join(parts)
+
+    def run() -> None:
+        try:
+            retrieve = lambda q: search(q, k=20, where=where)  # noqa: E731
+            result["answer"] = answer(question, retrieve=retrieve, generate=generate)
+        except Exception as error:  # surfaced to the client as an `error` event (Mock UX S2e)
+            result["error"] = type(error).__name__
+        tokens.put(None)
+
+    def events():
+        threading.Thread(target=run, daemon=True).start()
+        first = None
+        while (piece := tokens.get()) is not None:
+            first = first or time.perf_counter() - start
+            yield sse("token", piece)
+        if "error" in result:
+            yield sse("error", {"message": "The answer couldn't be generated."})
+            return
+        a = result["answer"]
+        by_id = {h.chunk_id: h for h in a.sources}
+        cites = [
+            CitationOut(**vars(c), text=by_id[c.chunk_id].text).model_dump() for c in a.citations
+        ]
+        total = time.perf_counter() - start
+        first = round(first or total, 3)
+        log_request(
+            {
+                "question": req.question,
+                "cached": False,
+                "stream": True,
+                "refusal": a.refusal,
+                "first_token_s": first,
+                "latency_s": round(total, 3),
+            }
+        )
+        done = {
+            "answer": a.text,
+            "refusal": a.refusal,
+            "citations": cites,
+            "standalone_question": question,
+            "first_token_s": first,
+        }
+        yield sse("done", done)
+
+    return StreamingResponse(events(), media_type="text/event-stream")
 
 
 @app.get("/documents", response_model=list[DocumentOut])
