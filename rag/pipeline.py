@@ -13,12 +13,14 @@ from app.prompting import build_messages, load_system_prompt, render_prompt
 from rag.citations import Citation, resolve_citations
 from rag.context import assemble_context
 from rag.guardrails import ADVICE_NOTICE, NO_EVIDENCE, has_evidence, is_advice_seeking
+from retrieval.neighbours import add_neighbours
 from retrieval.reranker import rerank as lexical_rerank
 from retrieval.search import Hit, search
 
 Retrieve = Callable[[str], list[Hit]]
 Rerank = Callable[[str, list[Hit]], list[Hit]]
 Generate = Callable[[list[dict]], str]
+Expand = Callable[[list[Hit]], list[Hit]]
 
 
 @dataclass
@@ -43,6 +45,7 @@ def answer(
     rerank: Rerank = lexical_rerank,
     generate: Generate = default_generate,
     threshold: float | None = None,
+    expand: Expand = add_neighbours,
 ) -> Answer:
     threshold = get_settings().refusal_threshold if threshold is None else threshold
     advice = is_advice_seeking(question)
@@ -51,7 +54,7 @@ def answer(
         if advice:
             return Answer(ADVICE_NOTICE, refusal="advice")
         return Answer(NO_EVIDENCE, refusal="no_evidence")
-    context, used = assemble_context(hits)
+    context, used = assemble_context(expand(hits))
     messages = build_messages(
         render_prompt("answer", context=context, question=question), load_system_prompt()
     )

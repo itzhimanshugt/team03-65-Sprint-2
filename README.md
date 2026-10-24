@@ -285,11 +285,11 @@ git push -u origin feature/document-ingestion
 | K1 Recall@5 | ≥ 0.85 | 0.83 (vector; unchanged by re-ranking) |
 | K2 MRR@5 | ≥ 0.70 | **0.79** with re-ranking ✅ |
 | K3 Citation accuracy | ≥ 90% | Manual review sheet: `outputs/c34/review_sheet.md` |
-| K4 Hallucination rate | ≤ 5% | 0 invented facts in the spot check; 1 weak citation |
+| K4 Hallucination rate | ≤ 5% | 0 invented facts in the spot check |
 | K5 Correct refusals | ≥ 90% | **90%** ✅ |
 | K6 False refusals | ≤ 10% | **0%** ✅ |
-| K8 Latency | p95 ≤ 8 s; first token ≤ 2 s | p95 15.7 s (non-streamed eval); first token 2.2–4.6 s ❌ (free-tier model) |
-| — Answer spot check | — | 28 / 30 answerable questions correct and complete |
+| K8 Latency | p95 ≤ 8 s; first token ≤ 2 s | p95 12.2 s (non-streamed eval); first token 2.2–4.6 s ❌ (free-tier model) |
+| — Answer spot check | — | 29 / 30 answerable questions correct and complete |
 
 ## Limitations
 
