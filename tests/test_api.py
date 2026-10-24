@@ -64,3 +64,25 @@ def test_repeat_question_served_from_cache(monkeypatch, tmp_path):
     assert len(calls) == 1
     s = client.get("/stats").json()
     assert s["requests"] == 2 and s["cache_hits"] == 1 and s["refusals"] == 2
+
+
+def test_upload_clears_query_cache(monkeypatch):
+    import app.observability as obs
+    from ingestion.upload import UploadResult
+
+    monkeypatch.setattr(api, "CACHE", obs.QueryCache())
+    monkeypatch.setattr(api, "get_collection", lambda: FakeCollection())
+    monkeypatch.setattr(api, "index_upload", lambda path, entry, col: UploadResult("d2", 1, 0))
+    api.CACHE.put("k", {"answer": "old"})
+    r = TestClient(api.app).post(
+        "/documents",
+        files={"file": ("n.md", b"# N\n\ntext")},
+        data={
+            "title": "N",
+            "doc_type": "internal",
+            "issuer": "F",
+            "family": "n",
+            "published_date": "2026-10-24",
+        },
+    )
+    assert r.status_code == 201 and api.CACHE.get("k") is None

@@ -157,6 +157,7 @@ def upload_document(
             r = index_upload(path, entry, get_collection())
         except UploadError as error:
             raise HTTPException(error.status, str(error)) from error
+    CACHE.items.clear()  # answers may change once a new document or version is searchable
     return UploadOut(
         doc_id=r.doc_id, status="Indexed", chunks=r.chunks, superseded_chunks=r.superseded
     )
