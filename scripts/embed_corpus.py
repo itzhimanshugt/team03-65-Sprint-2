@@ -1,11 +1,14 @@
 """Embed the whole corpus into data/processed/embeddings.npy (+ embedding_ids.json).
 
-Run: python -m scripts.embed_corpus  (needs data/processed/chunks.jsonl)
-Re-running only embeds chunks that are not in the cache yet. Every run, complete or stopped by a
-daily quota, is logged to outputs/c19/embedding_runs.md; a stopped run exits with status 1.
+Run: python -m scripts.embed_corpus [max_new_chunks]  (needs data/processed/chunks.jsonl)
+Re-running only embeds chunks that are not in the cache yet, smallest documents first.
+Every run, complete or stopped by a daily quota, is logged to outputs/c19/embedding_runs.md;
+a stopped run exits with status 1.
 """
 
 import json
+import sys
+from collections import Counter
 from datetime import date
 from pathlib import Path
 
@@ -16,6 +19,13 @@ from app.llm import retry_delay_seconds
 from embeddings.batch import BatchReport, VectorCache, embed_records
 
 records = [json.loads(line) for line in open("data/processed/chunks.jsonl", encoding="utf-8")]
+# Smallest documents first: a run cut short by the daily quota still covers the most documents.
+size = Counter(r["doc_id"] for r in records)
+records.sort(key=lambda r: size[r["doc_id"]])  # stable: chunk order within a document is kept
+if len(sys.argv) > 1:  # leave part of the free-tier daily quota for questions
+    cached = set(VectorCache("data/processed").ids)
+    new = [r for r in records if r["chunk_id"] not in cached][: int(sys.argv[1])]
+    records = [r for r in records if r["chunk_id"] in cached] + new
 rep, result = BatchReport(), "complete"
 try:
     embed_records(records, VectorCache("data/processed"), report=rep)
