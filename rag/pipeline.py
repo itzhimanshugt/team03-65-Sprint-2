@@ -13,6 +13,7 @@ from app.prompting import build_messages, load_system_prompt, render_prompt
 from rag.citations import Citation, resolve_citations
 from rag.context import assemble_context
 from rag.guardrails import ADVICE_NOTICE, NO_EVIDENCE, has_evidence, is_advice_seeking
+from retrieval.reranker import rerank as lexical_rerank
 from retrieval.search import Hit, search
 
 Retrieve = Callable[[str], list[Hit]]
@@ -38,8 +39,8 @@ def default_generate(messages: list[dict]) -> str:
 
 def answer(
     question: str,
-    retrieve: Retrieve = search,
-    rerank: Rerank = lambda _q, hits: hits,
+    retrieve: Retrieve = lambda q: search(q, k=20),  # wide pool, cut to 5 by the re-ranker
+    rerank: Rerank = lexical_rerank,
     generate: Generate = default_generate,
     threshold: float | None = None,
 ) -> Answer:
