@@ -1,4 +1,5 @@
-from rag.pipeline import NO_EVIDENCE, answer
+from rag.guardrails import NO_EVIDENCE
+from rag.pipeline import answer
 from retrieval.search import Hit
 
 
