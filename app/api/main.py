@@ -11,7 +11,8 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, Form, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.llm import stream_complete
@@ -258,3 +259,13 @@ def upload_document(
     return UploadOut(
         doc_id=r.doc_id, status="Indexed", chunks=r.chunks, superseded_chunks=r.superseded
     )
+
+
+# Web UI, registered after the API routes so they win any path clash.
+WEB = Path(__file__).resolve().parent.parent / "web"
+app.mount("/static", StaticFiles(directory=WEB), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def index() -> FileResponse:
+    return FileResponse(WEB / "index.html")

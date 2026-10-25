@@ -37,7 +37,7 @@ Documents ──► Chunk ──► Embed ──► Vector DB ──► Retrieve
 | Index | `retrieval/vector_store.py`, `retrieval/indexer.py` | ChromaDB at `data/chroma` |
 | Retrieve | `retrieval/search.py`, `retrieval/reranker.py`, `retrieval/neighbours.py` | top-5 cited chunks |
 | Answer | `rag/pipeline.py`, `rag/context.py`, `rag/citations.py`, `rag/guardrails.py`, `rag/conversation.py` | grounded answer + citations, or a refusal |
-| Serve | `app/api/main.py` (FastAPI), `app/ui/streamlit_app.py` (Streamlit) | API + chat UI |
+| Serve | `app/api/main.py` (FastAPI), `app/web/` (HTML/CSS/vanilla JS) | API + web UI on one port |
 
 ## Data source
 
@@ -65,7 +65,10 @@ The knowledge base is **20 approved documents** listed in [data/catalog.csv](dat
 
 **Demo:** https://verifai-vysj.onrender.com (free Render plan: first load after idle takes ~30–60 s). Deploy steps: [docs/DEPLOY.md](docs/DEPLOY.md).
 
-![Live demo](docs/screenshots/live-render.jpg)
+![Ask: cited answer](docs/screenshots/web-answer.jpg)
+![Evidence panel open on a citation](docs/screenshots/web-evidence.jpg)
+
+More screens (dark-mode browser, still light): [not enough evidence](docs/screenshots/web-not-enough-evidence-dark.jpg) · [knowledge base](docs/screenshots/web-knowledge-dark.jpg) · [activity log](docs/screenshots/web-activity-dark.jpg)
 
 ## Quick start
 
@@ -76,8 +79,7 @@ python -m scripts.download_corpus         # approved sample documents → data/r
 python -m scripts.ingest_corpus           # load → clean → chunk → metadata
 python -m scripts.embed_corpus            # resumable; the free tier allows ~1,000 chunks/day
 python -m scripts.build_index             # ChromaDB at data/chroma
-uvicorn app.api.main:app --reload         # API + Swagger at http://localhost:8000/docs
-streamlit run app/ui/streamlit_app.py     # chat UI at http://localhost:8501
+uvicorn app.api.main:app --reload         # web UI at http://localhost:8000, Swagger at /docs
 ```
 
 Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · PRD: [PRD.md](PRD.md) · Mock UX: [docs/MOCK_UX_ANNOTATIONS.md](docs/MOCK_UX_ANNOTATIONS.md)
@@ -92,6 +94,8 @@ Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · PRD: [PRD.md](PRD.
 | `GET /documents` | Indexed documents with version and `is_latest` |
 | `GET /stats` | Requests, cache hits, refusals, p95 latency |
 | `GET /health` | Status and number of chunks indexed |
+| `GET /activity` | Recent requests, newest first: question, outcome, cited docs, latency |
+| `GET /` | Web UI (`app/web/`): ask, knowledge base, activity log |
 
 ## Problem Statement
 
@@ -167,7 +171,7 @@ base.
 ## Project Structure
 
 ```text
-app/          config, LLM client, prompts, tokens, history, observability; api/ (FastAPI), ui/ (Streamlit)
+app/          config, LLM client, prompts, tokens, history, observability; api/ (FastAPI), web/ (UI)
 ingestion/    loaders, cleaner, chunker, metadata, pipeline, upload
 embeddings/   embedder (+ question cache), batch, similarity, sanity
 retrieval/    vector_store, indexer, search, hybrid, reranker, neighbours
