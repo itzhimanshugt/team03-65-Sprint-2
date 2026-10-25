@@ -55,3 +55,4 @@ data/processed/*
 !data/processed/embeddings.npy
 !data/processed/embedding_ids.json
 data/logs/
+.taste-skill/
