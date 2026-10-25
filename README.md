@@ -306,7 +306,7 @@ git push -u origin feature/document-ingestion
 
 ## Sprint 2 Status
 
-**Status:** all 40 concepts are implemented, one PR each. Results from the final evaluation run (24 Oct 2026, 2,824 of 3,528 chunks indexed, all 20 documents):
+**Status:** all 40 concepts are implemented, one PR each. Results from the final evaluation run (25 Oct 2026, all 3,528 chunks from 20 documents indexed):
 
 | KPI | Target | Result |
 |---|---|---|
@@ -316,12 +316,12 @@ git push -u origin feature/document-ingestion
 | K4 Hallucination rate | ≤ 5% | **0%** (0 / 29 answers with an unsupported claim) ✅ |
 | K5 Correct refusals | ≥ 90% | **90%** ✅ |
 | K6 False refusals | ≤ 10% | **0%** ✅ |
-| K8 Latency | p95 ≤ 8 s; first token ≤ 2 s | p95 12.2 s (non-streamed eval); first token 2.2–4.6 s ❌ (free-tier model) |
+| K8 Latency | p95 ≤ 8 s; first token ≤ 2 s | p95 11.1 s (non-streamed eval); first token 2.2–4.6 s ❌ (free-tier model) |
 | — Answer spot check | — | 29 / 30 answerable questions correct and complete |
 
 ## Limitations
 
-- **Free tier:** about 1,000 embeddings a day, so 704 chunks of the SEBI MF Master Circular are still waiting to be embedded. Free-tier latency also misses the K8 target.
+- **Free tier:** about 1,000 embeddings a day, so the full corpus took 4 runs over 3 days (see `outputs/c19`). Free-tier latency also misses the K8 target.
 - **Hybrid search:** BM25 + RRF scored lower than vector search on this corpus, because factsheets repeat fund-type words on every page. The lexical re-ranker is used instead.
 - **Images:** riskometer dials and other images in PDFs are not read. Answers rely on the text near them.
 - Quality depends on the approved documents. The system cannot guarantee legal or regulatory compliance.
