@@ -65,10 +65,10 @@ The knowledge base is **20 approved documents** listed in [data/catalog.csv](dat
 
 **Demo:** https://verifai-vysj.onrender.com (free Render plan: first load after idle takes ~30–60 s). Deploy steps: [docs/DEPLOY.md](docs/DEPLOY.md).
 
-![Ask: cited answer](docs/screenshots/web-answer.jpg)
-![Evidence panel open on a citation](docs/screenshots/web-evidence.jpg)
+![Ask the documents](docs/screenshots/web-ask.jpg)
+![Cited answer with the evidence panel open (dark-mode browser)](docs/screenshots/web-evidence.jpg)
 
-More screens (dark-mode browser, still light): [not enough evidence](docs/screenshots/web-not-enough-evidence-dark.jpg) · [knowledge base](docs/screenshots/web-knowledge-dark.jpg) · [activity log](docs/screenshots/web-activity-dark.jpg)
+More screens: [knowledge base](docs/screenshots/web-knowledge.jpg) · [activity log](docs/screenshots/web-activity.jpg)
 
 ## Quick start
 
