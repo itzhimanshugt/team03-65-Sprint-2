@@ -1,9 +1,20 @@
+import pytest
 from fastapi.testclient import TestClient
 
 import app.api.main as api
+import app.observability as obs
 from rag.citations import Citation
 from rag.pipeline import Answer
 from retrieval.search import Hit
+
+
+@pytest.fixture(autouse=True)
+def private_log(monkeypatch, tmp_path):
+    """Keep test requests out of the real activity log (data/logs/requests.jsonl)."""
+    log = tmp_path / "requests.jsonl"
+    monkeypatch.setattr(api, "log_request", lambda e: obs.log_request(e, log))
+    monkeypatch.setattr(api, "stats", lambda: obs.stats(log))
+    monkeypatch.setattr(api, "LOG", log)
 
 
 class FakeCollection:
@@ -106,3 +117,14 @@ def test_chat_stream_sends_tokens_then_citations(monkeypatch, tmp_path):
         "event: done"
     )
     assert '"chunk_id": "c1"' in body and '"answer": "It is 1% [1]."' in body
+
+
+def test_activity_lists_newest_first(monkeypatch, tmp_path):
+    import app.observability as obs
+
+    log = tmp_path / "log.jsonl"
+    for q in ("first", "second"):
+        obs.log_request({"question": q}, log)
+    monkeypatch.setattr(api, "LOG", log)
+    rows = TestClient(api.app).get("/activity").json()
+    assert [r["question"] for r in rows] == ["second", "first"]

@@ -46,3 +46,17 @@ def test_grounding_rules_reach_the_llm():
     system, user = seen["m"]
     assert "Do not use outside knowledge" in system["content"]
     assert "Answer only from the context above" in user["content"]
+
+
+def test_trace_reports_each_stage():
+    out = answer(
+        "exit load?",
+        retrieve=lambda q: [hit("a", 0.9), hit("b", 0.6)],
+        rerank=lambda q, hits: hits[:1],
+        generate=lambda m: "1% [1].",
+        threshold=0.5,
+        expand=lambda hits: hits,
+    )
+    t = out.trace
+    assert (t["candidates"], t["reranked"], t["top_score"], t["neighbours"]) == (2, 1, 0.9, 0)
+    assert t["context_chunks"] == 1 and t["context_tokens"] > 0

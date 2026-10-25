@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Mono:wght@500&family=Libre+Franklin:wght@400;500;600&display=swap');
+
+:root {
+  --ink: #1f1d1a; --ink-2: #4a463f; --muted: #6b665e; --line: #e4ddd1;
+  --paper: #f5f1eb; --card: #fffdf9; --gold: #8a6a35; --gold-soft: #f3ead9;
+  --green: #2c694e; --green-bg: #e4efe8; --red: #9b2c2c; --red-bg: #fbefec;
+  --amber: #7a5a14; --amber-bg: #f8f0dc;
+}
+
+html, body, .stApp, .stMarkdown, input, textarea, button, [data-testid="stWidgetLabel"] {
+  font-family: 'Libre Franklin', system-ui, sans-serif; color: var(--ink);
+}
+::selection { background: var(--gold-soft); color: var(--ink); }
+* { scrollbar-color: #d3c9b8 transparent; }
+textarea, input { caret-color: var(--gold); }
+
+/* Type */
+.vf-h1 { font-family: 'EB Garamond', serif !important; font-weight: 600 !important;
+         font-size: 2.35rem !important; letter-spacing: -0.02em; line-height: 1.1 !important;
+         margin: 0 0 .35rem !important; padding: 0 !important; text-wrap: balance; }
+.vf-h3 { font-family: 'EB Garamond', serif !important; font-weight: 600 !important;
+         font-size: 1.3rem !important; margin: 1.2rem 0 .5rem !important; padding: 0 !important; }
+.vf-lede { font-family: 'EB Garamond', serif; font-style: italic; font-size: 1.12rem !important;
+           color: var(--ink-2); max-width: 68ch; margin: 0 0 1.4rem !important; }
+.vf-answer, .st-key-card-answer .stMarkdown p, .st-key-card-answer .stMarkdown li {
+  font-family: 'EB Garamond', serif; font-size: 1.14rem; line-height: 1.55; max-width: 72ch;
+}
+.vf-muted { color: var(--muted); font-size: .84rem; line-height: 1.45; }
+.vf-num { font-family: 'IBM Plex Mono', monospace; font-size: .74rem; color: var(--muted);
+          font-variant-numeric: tabular-nums; }
+
+/* Sidebar brand + corpus */
+.vf-brand { font-family: 'EB Garamond', serif; font-weight: 600; font-size: 1.9rem;
+            letter-spacing: 0.04em; line-height: 1; }
+.vf-tagline { font-family: 'EB Garamond', serif; font-style: italic; color: var(--muted);
+              margin: .25rem 0 .9rem; }
+.vf-corpus { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+             padding: .75rem .85rem; font-size: .86rem; margin-top: 1rem; }
+.vf-corpus.warn { background: var(--amber-bg); }
+.vf-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+          background: var(--green); margin-right: .45rem; vertical-align: middle; }
+
+/* Badges, tags */
+.vf-badge { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: .68rem;
+            letter-spacing: .06em; text-transform: uppercase; padding: .22rem .6rem;
+            border-radius: 999px; border: 1px solid var(--line); background: var(--card);
+            color: var(--ink-2); margin: 0 .35rem .4rem 0; }
+.vf-badge.ok { background: var(--green-bg); color: var(--green); border-color: #cbe0d3; }
+.vf-badge.warn { background: var(--amber-bg); color: var(--amber); border-color: #ecdcb2; }
+.vf-badge.red { background: var(--red-bg); color: var(--red); border-color: #efc9c3; }
+.vf-badge.pending { color: var(--gold); }
+.vf-tag { font-family: 'IBM Plex Mono', monospace; font-size: .72rem; background: var(--ink);
+          color: #fff; border-radius: 4px; padding: .1rem .38rem; margin-right: .5rem; }
+
+/* Citation cards */
+.vf-cite-head { display: flex; align-items: center; justify-content: space-between; }
+.vf-cite-head .vf-badge { margin: 0; }
+.vf-cite-title { font-family: 'EB Garamond', serif; font-weight: 600; font-size: 1.08rem;
+                 line-height: 1.25; margin: .55rem 0 .2rem; }
+.vf-excerpt { font-family: 'EB Garamond', serif; font-style: italic; color: var(--ink-2);
+              font-size: .98rem; line-height: 1.4; margin-top: .45rem; }
+
+/* Advice boundary (S2d) */
+.vf-boundary { background: var(--red-bg); border: 1px solid #efc9c3; border-radius: 12px;
+               padding: .75rem .95rem; color: var(--red); margin: .2rem 0 .9rem; }
+.vf-boundary div { color: #6f2323; margin-top: .2rem; }
+
+/* Pipeline stages */
+.vf-stage { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+            padding: .75rem .8rem; height: 100%; }
+.vf-stage-name { font-size: .78rem; color: var(--muted); font-weight: 600; }
+.vf-stage-value { font-family: 'EB Garamond', serif; font-size: 1.15rem; font-weight: 600;
+                  margin: .2rem 0 .3rem; line-height: 1.25; }
+
+/* Evidence panel (S3) */
+.vf-meta { width: 100%; border-collapse: collapse; margin: .6rem 0 .8rem; font-size: .84rem; }
+.vf-meta td { padding: .32rem 0; border-bottom: 1px solid var(--line); }
+.vf-meta td:first-child { color: var(--muted); width: 40%; }
+.vf-meta td:last-child { font-family: 'IBM Plex Mono', monospace; font-size: .76rem;
+                         font-variant-numeric: tabular-nums; text-align: right; }
+.vf-quote { font-family: 'EB Garamond', serif; font-size: 1.04rem; line-height: 1.5;
+            white-space: pre-wrap; background: #fffaf0; border: 1px solid #eadfc8;
+            border-radius: 12px; padding: .85rem 1rem; max-height: 420px; overflow-y: auto; }
+.vf-turn { font-size: .9rem; padding: .45rem 0; border-bottom: 1px solid var(--line); }
+
+/* Streamlit surfaces */
+[class*="st-key-card-"] { background: var(--card); border: 1px solid var(--line);
+  border-radius: 14px; padding: 1.1rem 1.2rem; box-shadow: 0 1px 3px rgba(31, 29, 26, .05); }
+[class*="st-key-card-cite"] { height: 100%; }
+[data-testid="stSidebar"] { background: var(--card); border-right: 1px solid var(--line); }
+[data-testid="stMetricValue"] { font-family: 'EB Garamond', serif; font-size: 1.5rem !important; }
+[data-testid="stMetricLabel"] p { font-size: .78rem !important; color: var(--muted); }
+[data-testid="stExpander"] details { border-color: var(--line); border-radius: 14px;
+  background: var(--card); }
+.stButton button[kind="primary"], [data-testid="stFormSubmitButton"] button {
+  background: var(--ink); border-color: var(--ink); color: #fff; border-radius: 10px;
+  font-family: 'EB Garamond', serif; font-size: 1.02rem; padding: .45rem 1.1rem;
+}
+.stButton button[kind="primary"]:hover, [data-testid="stFormSubmitButton"] button:hover {
+  background: #36322c; border-color: #36322c; color: #fff;
+}
+.stButton button[kind="tertiary"] { color: var(--gold); padding-left: 0; font-weight: 600; }
+:focus-visible { outline: 2px solid var(--gold) !important; outline-offset: 2px; }

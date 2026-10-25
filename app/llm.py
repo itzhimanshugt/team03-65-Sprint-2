@@ -41,7 +41,10 @@ def get_client(settings: Settings | None = None) -> OpenAI:
         raise MissingAPIKeyError(
             "LLM_API_KEY is not set. Copy .env.example to .env and add your key."
         )
-    return OpenAI(api_key=settings.llm_api_key, base_url=settings.llm_base_url)
+    # 30 s per attempt: a stalled free-tier call fails fast instead of freezing the UI for 10 min
+    return OpenAI(
+        api_key=settings.llm_api_key, base_url=settings.llm_base_url, timeout=30, max_retries=1
+    )
 
 
 def complete(messages: list[dict], client: OpenAI | None = None, **params) -> Completion:

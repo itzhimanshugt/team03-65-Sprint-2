@@ -15,7 +15,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.llm import stream_complete
-from app.observability import QueryCache, cache_key, log_request, stats
+from app.observability import LOG, QueryCache, cache_key, log_request, stats
 from ingestion.upload import UploadError, index_upload
 from rag.conversation import condense
 from rag.pipeline import answer
@@ -44,6 +44,20 @@ class CitationOut(BaseModel):
     title: str
     chunk_id: str
     text: str
+    score: float = 0.0  # cosine similarity of the cited chunk to the question
+    published_date: str = ""
+    version: int = 1
+
+
+def cite_out(c, hit) -> CitationOut:
+    md = hit.metadata
+    return CitationOut(
+        **vars(c),
+        text=hit.text,
+        score=round(hit.score, 3),
+        published_date=str(md.get("published_date", "")),
+        version=int(md.get("version", 1)),
+    )
 
 
 class ChatResponse(BaseModel):
@@ -52,6 +66,7 @@ class ChatResponse(BaseModel):
     refused: bool
     refusal: str | None
     citations: list[CitationOut]
+    trace: dict = {}
 
 
 class DocumentOut(BaseModel):
@@ -79,6 +94,15 @@ def usage_stats() -> dict:
     return stats()
 
 
+@app.get("/activity")
+def activity(limit: int = 50) -> list[dict]:
+    """Most recent requests first (US-12): question, cached, refusal, cited docs, latency."""
+    if not LOG.exists():
+        return []
+    rows = [json.loads(line) for line in LOG.read_text(encoding="utf-8").splitlines() if line]
+    return rows[::-1][:limit]
+
+
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest) -> ChatResponse:
     start = time.perf_counter()
@@ -103,7 +127,8 @@ def chat(req: ChatRequest) -> ChatResponse:
         standalone_question=question,
         refused=a.refused,
         refusal=a.refusal,
-        citations=[CitationOut(**vars(c), text=by_id[c.chunk_id].text) for c in a.citations],
+        citations=[cite_out(c, by_id[c.chunk_id]) for c in a.citations],
+        trace=a.trace,
     )
     CACHE.put(key, resp.model_dump())
     log_request(
@@ -158,9 +183,7 @@ def chat_stream(req: ChatRequest) -> StreamingResponse:
             return
         a = result["answer"]
         by_id = {h.chunk_id: h for h in a.sources}
-        cites = [
-            CitationOut(**vars(c), text=by_id[c.chunk_id].text).model_dump() for c in a.citations
-        ]
+        cites = [cite_out(c, by_id[c.chunk_id]).model_dump() for c in a.citations]
         total = time.perf_counter() - start
         first = round(first or total, 3)
         log_request(
@@ -169,6 +192,7 @@ def chat_stream(req: ChatRequest) -> StreamingResponse:
                 "cached": False,
                 "stream": True,
                 "refusal": a.refusal,
+                "cited_doc_ids": sorted({c.chunk_id.split("-")[0] for c in a.citations}),
                 "first_token_s": first,
                 "latency_s": round(total, 3),
             }
@@ -179,6 +203,7 @@ def chat_stream(req: ChatRequest) -> StreamingResponse:
             "citations": cites,
             "standalone_question": question,
             "first_token_s": first,
+            "trace": a.trace,
         }
         yield sse("done", done)
 
