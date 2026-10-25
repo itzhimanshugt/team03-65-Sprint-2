@@ -1,95 +1,50 @@
-"""VerifAI chat UI. Run the API first, then: streamlit run app/ui/streamlit_app.py"""
+"""VerifAI web app. Run the API first, then: streamlit run app/ui/streamlit_app.py
 
-import json
-import os
+Layout and states follow the Mock UX (docs/MOCK_UX_ANNOTATIONS.md, Figma file linked there):
+Ask (S1/S2 + S3 evidence panel), Knowledge base (S4/S5) and Activity log (S6).
+"""
 
-import httpx
-import streamlit as st
+import sys
+from pathlib import Path
 
-API = os.getenv("VERIFAI_API", "http://127.0.0.1:8000")
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # for `common` under any runner
 
-st.set_page_config(page_title="VerifAI", page_icon="✅")
-st.title("VerifAI")
-st.caption("Cited answers from your firm's approved documents. Facts, not investment advice.")
+import streamlit as st  # noqa: E402
+from common import get, style  # noqa: E402
+
+st.set_page_config(page_title="VerifAI", page_icon=":material/verified:", layout="wide")
+style()
 
 with st.sidebar:
-    st.header("Filters")
-    issuer = st.selectbox("Issuer", ["Any", "HSBC Mutual Fund", "PPFAS Mutual Fund", "SEBI"])
-    doc_type = st.selectbox(
-        "Document type", ["Any", "factsheet", "sid_kim", "circular", "research", "internal"]
+    st.markdown(
+        '<div class="vf-brand">VerifAI</div>'
+        '<div class="vf-tagline">Answers from approved documents only</div>',
+        unsafe_allow_html=True,
     )
-    if st.button("New chat"):
-        st.session_state.turns = []
 
-st.session_state.setdefault("turns", [])  # [(question, answer, citations, refusal)]
+PAGES = [
+    st.Page("pages/ask.py", title="Ask", icon=":material/forum:", default=True),
+    st.Page("pages/knowledge.py", title="Knowledge base", icon=":material/folder_open:"),
+    st.Page("pages/activity.py", title="Activity log", icon=":material/receipt_long:"),
+]
+nav = st.navigation(PAGES, position="hidden")  # links drawn below the brand, as in the Mock UX
 
+with st.sidebar:
+    for page in PAGES:
+        st.page_link(page)
+    health = get("/health", {})
+    if health.get("chunks_indexed"):
+        st.markdown(
+            '<div class="vf-corpus"><span class="vf-dot"></span><b>Corpus verified</b>'
+            f'<div class="vf-num">{health["chunks_indexed"]:,} chunks indexed</div>'
+            '<div class="vf-muted">Latest document versions only</div></div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            '<div class="vf-corpus warn"><b>API unreachable</b>'
+            '<div class="vf-muted">Start it with: uvicorn app.api.main:app</div></div>',
+            unsafe_allow_html=True,
+        )
 
-def show(answer: str, citations: list[dict], refusal: str | None) -> None:
-    if refusal == "no_evidence":  # Mock UX S2c
-        st.warning(answer)
-        return
-    if refusal == "advice":  # Mock UX S2d
-        st.info("I can share facts, not investment advice.")
-    st.markdown(answer)
-    if citations:
-        st.caption(" ".join(f"`[{c['n']}] {c['source_name']} · p.{c['page']}`" for c in citations))
-        for c in citations:  # Mock UX S3: source panel
-            with st.expander(f"[{c['n']}] {c['title']} · p.{c['page']}"):
-                st.text(c["text"])
-
-
-if not st.session_state.turns:  # Mock UX S1a
-    st.subheader("Ask anything about your approved documents")
-    st.write("Every answer comes with its sources. Try:")
-    for example in (
-        "What is the exit load of HSBC Value Fund?",
-        "What is the benchmark of Parag Parikh Flexi Cap Fund?",
-    ):
-        st.code(example, language=None)
-
-for q, a, cites, refusal in st.session_state.turns:
-    st.chat_message("user").write(q)
-    with st.chat_message("assistant"):
-        show(a, cites, refusal)
-
-if question := st.chat_input("Ask about a fund, circular or firm policy"):
-    st.chat_message("user").write(question)
-    body = {
-        "question": question,
-        "history": [(q, a) for q, a, _, _ in st.session_state.turns[-4:]],
-        "issuer": None if issuer == "Any" else issuer,
-        "doc_type": None if doc_type == "Any" else doc_type,
-    }
-    with st.chat_message("assistant"):
-        done: dict = {}
-
-        def tokens():  # US-08: render the answer as it streams (POST /chat/stream, SSE)
-            with httpx.stream("POST", f"{API}/chat/stream", json=body, timeout=60) as resp:
-                resp.raise_for_status()
-                event = None
-                for line in resp.iter_lines():
-                    if line.startswith("event: "):
-                        event = line[7:]
-                    elif line.startswith("data: "):
-                        data = json.loads(line[6:])
-                        if event == "token":
-                            yield data
-                        elif event == "done":
-                            done.update(data)
-                        elif event == "error":
-                            raise httpx.HTTPError(data["message"])
-
-        try:
-            placeholder = st.empty()
-            with placeholder.container():
-                st.write_stream(tokens())
-        except httpx.HTTPError:  # Mock UX S2e
-            st.error(
-                "Something went wrong. The answer couldn't be generated. Your question is saved."
-            )
-            st.stop()
-        placeholder.empty()  # replace the raw stream with the final answer + citation chips
-        r = done
-        show(r["answer"], r["citations"], r["refusal"])
-    st.session_state.turns.append((question, r["answer"], r["citations"], r["refusal"]))
-    st.rerun()  # redraw from history so the empty state (S1a) disappears
+nav.run()
