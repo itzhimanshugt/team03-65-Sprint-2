@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>VerifAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cousine:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.4 3 7.9 7 9 4-1.1 7-4.6 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-books" viewBox="0 0 24 24"><path d="M4 4h5v16H4zM9 4h5v16H9z"/><path d="m14.5 5 4.8-1.3 3.2 15.5-4.8 1.3z"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H6v18h12V7l-4-4Z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+</svg>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="rail-brand">
+      <div class="rail-kicker"><span class="dot gold"></span>Approved-document desk</div>
+      <div class="wordmark">VERIFAI</div>
+    </div>
+    <nav class="rail-nav" aria-label="Main">
+      <a href="#ask" data-route="ask"><svg><use href="#i-chat"/></svg>Ask the documents</a>
+      <a href="#knowledge" data-route="knowledge"><svg><use href="#i-books"/></svg>Knowledge base</a>
+      <a href="#activity" data-route="activity"><svg><use href="#i-log"/></svg>Activity log</a>
+    </nav>
+    <div class="rail-corpus" id="corpus">
+      <div class="corpus-title"><span class="dot green"></span>Corpus verified</div>
+      <div class="corpus-line" id="corpus-count">Checking index…</div>
+      <div class="mono-sm">Latest versions only · cosine ≥ 0.72</div>
+    </div>
+  </aside>
+
+  <div class="frame">
+    <header class="appbar">
+      <div class="appbar-title"><span class="cinzel">VerifAI</span><span class="slash">/</span><em>Compliance verification for advisors</em></div>
+      <div class="appbar-status" id="status-pill"><span class="dot green"></span>Grounded answers only</div>
+    </header>
+
+    <!-- ASK (Mock UX S1/S2/S3) -->
+    <main class="page" id="page-ask">
+      <div class="crumbs">
+        <span class="mono-xs muted">Advisory desk</span><span class="mono-xs">›</span><span class="mono-xs ink">Ask the documents</span>
+      </div>
+      <div class="chips-row">
+        <span class="chip-soft"><span class="dot green"></span>Refuses below the evidence threshold</span>
+        <span class="chip-line" id="stamp">Facts, not investment advice</span>
+      </div>
+      <h1 class="h1">Ask the approved documents</h1>
+      <p class="lede">Every answer is built only from compliance-approved factsheets, scheme documents, SEBI circulars and firm policy, and cites the exact page it came from.</p>
+
+      <div class="grid">
+        <div class="col-main">
+          <section class="card query" aria-label="Question">
+            <div class="card-head">
+              <span class="label"><svg><use href="#i-shield"/></svg>Question for verification</span>
+              <span class="mono-xs muted" id="corpus-baseline">Corpus: —</span>
+            </div>
+            <form id="ask-form">
+              <div class="well">
+                <textarea id="question" rows="3" placeholder="e.g. What is the exit load of HSBC Value Fund?" aria-label="Your question"></textarea>
+              </div>
+              <div class="scope-row">
+                <label class="select"><span class="label-sm">Issuer</span>
+                  <select id="issuer">
+                    <option value="">All issuers</option><option>HSBC Mutual Fund</option><option>PPFAS Mutual Fund</option><option>SEBI</option>
+                  </select><svg><use href="#i-chevron"/></svg></label>
+                <label class="select"><span class="label-sm">Document type</span>
+                  <select id="doc_type">
+                    <option value="">All document types</option><option value="factsheet">Factsheets</option><option value="sid_kim">Scheme documents (SID/KIM)</option><option value="circular">SEBI circulars</option><option value="research">Investor education</option><option value="internal">Firm policy</option>
+                  </select><svg><use href="#i-chevron"/></svg></label>
+                <div class="meter" title="Context sent to the model on the last answer">
+                  <span class="mono-xs muted">Context <b id="meter-text">0 / 3,000 tokens</b></span>
+                  <span class="meter-bar"><span id="meter-fill"></span></span>
+                </div>
+              </div>
+              <div class="actions">
+                <button type="button" class="btn-line" id="clear">Clear</button>
+                <button type="submit" class="btn-ink" id="submit"><svg><use href="#i-shield"/></svg>Verify with sources</button>
+              </div>
+            </form>
+            <div class="examples" id="examples">
+              <span class="label-sm">Try one</span>
+              <button type="button" class="example">What is the exit load of HSBC Value Fund?</button>
+              <button type="button" class="example">What is the benchmark of Parag Parikh Flexi Cap Fund?</button>
+              <button type="button" class="example">What is the cut-off time for liquid fund subscriptions?</button>
+            </div>
+          </section>
+
+          <div id="history"></div>
+          <article class="card answer" id="answer" hidden></article>
+        </div>
+
+        <aside class="col-side">
+          <section class="card side" id="evidence">
+            <div class="side-head"><span class="label">Evidence</span><span class="chip-line" id="evidence-tag">No source open</span></div>
+            <div id="evidence-body"><p class="muted small">Open a source on an answer to read the exact passage it was built from, with its document, page, date and version.</p></div>
+          </section>
+          <section class="card side">
+            <div class="side-head"><span class="label">How answers are checked</span></div>
+            <ol class="rules">
+              <li><span class="mono-xs gold">R1</span>Only approved documents are searched; older versions are excluded.</li>
+              <li><span class="mono-xs gold">R2</span>If the best match scores below 0.72, VerifAI says so instead of answering.</li>
+              <li><span class="mono-xs gold">R3</span>Advice questions get facts, never a recommendation.</li>
+              <li><span class="mono-xs gold">R4</span>Every claim carries a numbered citation to a page.</li>
+            </ol>
+          </section>
+          <section class="card side" id="session" hidden>
+            <div class="side-head"><span class="label">This session</span><button class="btn-text" id="new-session"><svg><use href="#i-reset"/></svg>New session</button></div>
+            <ul class="session-list" id="session-list"></ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <!-- KNOWLEDGE BASE (S4/S5) -->
+    <main class="page" id="page-knowledge" hidden>
+      <div class="crumbs"><span class="mono-xs muted">Compliance desk</span><span class="mono-xs">›</span><span class="mono-xs ink">Knowledge base</span></div>
+      <h1 class="h1">Knowledge base</h1>
+      <p class="lede">The documents compliance has approved. Only the latest version of each is searched; superseded versions stay on record.</p>
+      <div class="stats" id="kb-stats"></div>
+      <section class="card table-card"><table class="table" id="kb-table"><thead><tr><th>Document</th><th>Type</th><th>Issuer</th><th>Published</th><th>Version</th><th>Status</th><th class="num">Chunks</th></tr></thead><tbody></tbody></table></section>
+      <section class="card upload">
+        <div class="card-head"><span class="label"><svg><use href="#i-upload"/></svg>Upload an approved document</span><span class="mono-xs muted">PDF · HTML · TXT · MD · ≤ 25 MB</span></div>
+        <form id="upload-form" class="upload-grid">
+          <label class="field wide"><span class="label-sm">File</span><input type="file" name="file" accept=".pdf,.html,.htm,.txt,.md" required></label>
+          <label class="field"><span class="label-sm">Title</span><input name="title" required placeholder="HSBC MF Factsheet - October 2026"></label>
+          <label class="field"><span class="label-sm">Issuer</span><input name="issuer" required placeholder="HSBC Mutual Fund"></label>
+          <label class="field"><span class="label-sm">Type</span><select name="doc_type"><option>factsheet</option><option>sid_kim</option><option>circular</option><option>research</option><option>internal</option></select></label>
+          <label class="field"><span class="label-sm">Family</span><input name="family" required placeholder="hsbc-factsheet"></label>
+          <label class="field"><span class="label-sm">Published</span><input name="published_date" type="date" required></label>
+          <label class="field"><span class="label-sm">Version</span><input name="version" type="number" min="1" value="1" required></label>
+          <div class="upload-actions"><button class="btn-ink" type="submit"><svg><use href="#i-upload"/></svg>Index document</button><span id="upload-msg" class="small" role="status"></span></div>
+        </form>
+      </section>
+    </main>
+
+    <!-- ACTIVITY LOG (S6) -->
+    <main class="page" id="page-activity" hidden>
+      <div class="crumbs"><span class="mono-xs muted">Compliance desk</span><span class="mono-xs">›</span><span class="mono-xs ink">Activity log</span></div>
+      <h1 class="h1">Activity log</h1>
+      <p class="lede">Every question, what it cited and whether it was declined. API keys and prompts are never logged.</p>
+      <div class="stats" id="log-stats"></div>
+      <section class="card table-card"><table class="table" id="log-table"><thead><tr><th>Time</th><th>Question</th><th>Outcome</th><th>Cited documents</th><th>Cache</th><th class="num">Latency</th></tr></thead><tbody></tbody></table></section>
+    </main>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
