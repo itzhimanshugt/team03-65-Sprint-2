@@ -1,6 +1,6 @@
 # Deploying VerifAI (Render, free)
 
-One Docker container runs the API and the Streamlit UI. At start-up it builds the Chroma index from the committed embedding cache (`data/processed/`, about 15 MB), so deploying makes **no embedding API calls**.
+One Docker container runs FastAPI, which serves both the API and the web UI. At start-up it builds the Chroma index from the committed embedding cache (`data/processed/`, about 15 MB), so deploying makes **no embedding API calls**.
 
 1. Sign in at https://render.com with GitHub.
 2. Click **New → Blueprint**, pick `itzhimanshugt/team03-65-Sprint-2` and branch `main`. Render reads `render.yaml`, which defines one free Docker web service called `verifai`.

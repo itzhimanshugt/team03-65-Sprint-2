@@ -128,3 +128,11 @@ def test_activity_lists_newest_first(monkeypatch, tmp_path):
     monkeypatch.setattr(api, "LOG", log)
     rows = TestClient(api.app).get("/activity").json()
     assert [r["question"] for r in rows] == ["second", "first"]
+
+
+def test_web_ui_is_served():
+    client = TestClient(api.app)
+    page = client.get("/")
+    assert page.status_code == 200 and 'id="ask-form"' in page.text
+    script = client.get("/static/app.js")
+    assert script.status_code == 200 and "/chat/stream" in script.text

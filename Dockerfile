@@ -1,4 +1,4 @@
-# One container: FastAPI on :8000 (internal) + Streamlit on :7860 (public, Hugging Face Spaces port).
+# One container: FastAPI serves the API and the web UI on :7860 (PORT on Render).
 FROM python:3.11-slim
 RUN useradd -m -u 1000 user
 WORKDIR /app
