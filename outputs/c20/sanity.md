@@ -13,17 +13,12 @@
 
 Smallest margin between close and unrelated: **0.035**
 
-## Vector store checks (2,824 vectors)
+## Vector store checks (3,528 vectors)
 
 | Check | Result |
 |---|---|
-| one vector per chunk | FAIL |
+| one vector per chunk | PASS |
 | every vector has 768 dimensions | PASS |
 | no NaN or infinite values | PASS |
 | all vectors unit-length | PASS |
 | identical texts get identical vectors | PASS |
-
-**Status:** "one vector per chunk" fails *on purpose*: it compares vectors with all 3,528 chunks, and 704 chunks are still waiting.
-- All 704 belong to the 1,395-chunk SEBI Master Circular for MFs, the largest document (smallest documents are embedded first).
-- They are left for the next free-tier quota window (1,000 embeddings a day).
-- All 20 documents have vectors; 19 of them are complete.

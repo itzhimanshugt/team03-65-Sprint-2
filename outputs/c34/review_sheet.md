@@ -90,7 +90,7 @@ Supported: ☐ yes ☐ partly ☐ no · Unsupported claim: ☐
 
 Reference: 09 August 2004
 
-The inception date of the HSBC Midcap Fund is 09 August 2004 [1, 3].
+The inception date of the HSBC Midcap Fund is 09 August 2004 [1], [3].
 
 - [1] hsbc-factsheet-2026-08.pdf p.171: HSBC Midcap Fund - Regular Plan ~~ 8 Inception Date: 09-Aug-04 Fund / Benchmark (Value of ₹10,000 invested) 1 Year 3 Years 5 Years 10 Years Since Inception Amount in ` Returns (%) Amount in ` Returns …
 - [3] hsbc-factsheet-2026-08.pdf p.18: HSBC Midcap Fund Type of Scheme: An open ended equity scheme predominantly investing in mid cap stocks. Product labelling: This product is suitable for investors who are seeking : • Long term wealth c…
@@ -234,7 +234,7 @@ Supported: ☐ yes ☐ partly ☐ no · Unsupported claim: ☐
 
 Reference: The AMC
 
-The cost of intraday borrowing, if any, shall be borne by the Asset Management Company (AMC) [1], [5]. Additionally, any loss or cost incurred due to unforeseen events or delays in receiving funds from receivables must also be borne by the AMC [5].
+The cost of intraday borrowing, if any, shall be borne by the AMC [1], [5]. Additionally, any loss or cost incurred due to unforeseen events or delays in receiving funds from receivables must also be borne by the AMC [5].
 
 - [1] sebi-master-circular-mf-2026-03.pdf p.83: 5.9. Borrowings by Mutual Funds99 5.9.1. Intraday Borrowings: In terms of Regulation 42(1) and 42(2), the following conditions shall be applicable for intraday borrowings by Mutual Funds: (a) The poli…
 - [5] sebi-circular-mf-intraday-borrowing-2026-07.pdf p.3: 2.7. In line with para 11.10 of the Master C ircular, cost of intraday borrowing, if any, shall be borne by the AMC. Further, any loss or cost incurred, on account of an y unforeseen event or delay in…
@@ -245,9 +245,9 @@ Supported: ☐ yes ☐ partly ☐ no · Unsupported claim: ☐
 
 Reference: NISM Series-V-D Mutual Fund - Specialized Investment Fund Distributors Certification
 
-To distribute Specialized Investment Fund (SIF) products, individuals are required to hold the "NISM Series-V-D - Mutual Fund - Specialized Investment Fund Distributors Certification" [1]. Entities holding this certification are eligible to distribute both Mutual Fund and SIF products without separately holding the "NISM Series V-A – Mutual Fund Distributors Certification" [1]. 
+To distribute Specialized Investment Fund (SIF) products, distributors are required to hold a valid "NISM Series-V-D - Mutual Fund - Specialized Investment Fund Distributors Certification" [1]. Entities holding this certification are eligible to distribute both Mutual Fund and SIF products without separately holding the "NISM Series V-A – Mutual Fund Distributors Certification" [1]. 
 
-Additionally, SIF distributors who obtained the "NISM Series XIII - Common Derivatives Certification" on or before September 21, 2026, may continue to use that certification until its expiry, provided they also hold a valid "NISM Series V-A Mutual Fund Distributors Certification" [1]. The requirement to hold the "NISM Series XIII – Common Derivatives Certification" for SIF distribution will not be applicable after September 21, 2026 [1].
+The requirement to hold "NISM Series XIII – Common Derivatives Certification" for the distribution of SIF products will not be applicable after September 21, 2026 [1]. SIF distributors who obtained the "NISM Series XIII - Common Derivatives Certification" on or before September 21, 2026, may continue using it until its expiry, provided they also maintain a valid "NISM Series V-A Mutual Fund Distributors Certification" [1].
 
 - [1] sebi-circular-sif-distribution-2026-07.pdf p.2: sale and/or distribution of SIF products shall be required to have a valid "NISM Series-V-D - Mutual Fund - Specialized Investment Fund Distributors Certification". Entities holding this certification…
 
@@ -267,7 +267,7 @@ Supported: ☐ yes ☐ partly ☐ no · Unsupported claim: ☐
 
 Reference: guaranteed returns, risk-free, sure-shot, can't lose
 
-Advisors must never use the phrases "guaranteed returns", "risk-free", "sure-shot", or "can't lose" for any mutual fund scheme [1].
+Advisors must never use the phrases "guaranteed returns", "risk-free", "sure-shot" or "can't lose" for any mutual fund scheme [1].
 
 - [1] client-communication-guidelines.md p.5: ## 4. Forbidden phrases  Never use the phrases "guaranteed returns", "risk-free", "sure-shot" or "can't lose" for any mutual fund scheme.…
 
