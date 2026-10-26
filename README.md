@@ -132,14 +132,15 @@ LLM → Grounded Answer + Citations
 -   Vector database storage
 -   Semantic top-K retrieval
 -   Metadata filtering
--   Optional hybrid search and re-ranking
+-   Hybrid search (BM25 + RRF, evaluated; off by default) and lexical re-ranking
+-   Same-page neighbour chunks in the context
 -   Grounded generation
 -   Source citations
 -   Hallucination/refusal guardrails
 -   Conversational follow-ups
 -   Backend RAG API
 -   Document upload and indexing
--   Chat UI
+-   Web UI: ask with citations and evidence panel, knowledge base, activity log
 -   Streaming responses
 -   Logging and usage monitoring
 -   Retrieval and answer-quality evaluation
@@ -181,7 +182,7 @@ prompts/      system, answer, condense templates
 scripts/      one runnable script per step and demo (outputs go to outputs/cNN/)
 outputs/      evidence for each concept
 docs/         ARCHITECTURE, MOCK_UX_ANNOTATIONS, DEPLOY, screenshots
-tests/        ~125 offline tests
+tests/        124 offline tests
 ```
 
 ## Environment Setup
@@ -285,7 +286,7 @@ Never commit API keys or expose them in logs.
 ## Testing
 
 ```bash
-pytest        # ~120 offline tests: no API calls (LLM, embeddings and vector store are faked)
+pytest        # 124 offline tests: no API calls (LLM, embeddings and vector store are faked)
 ruff check .
 ```
 
@@ -302,10 +303,10 @@ Issue → Feature Branch → Implementation → Testing → Pull Request → Rev
 Example:
 
 ``` bash
-git checkout -b feature/document-ingestion
+git checkout -b feat/c12-chunking origin/main
 git add .
-git commit -m "feat: implement document ingestion"
-git push -u origin feature/document-ingestion
+git commit -m "[C12] Document chunking strategies"
+git push -u origin feat/c12-chunking   # then open a PR to main
 ```
 
 ## Sprint 2 Status
@@ -334,10 +335,9 @@ git push -u origin feature/document-ingestion
 
 **Squad:** 65\
 **Team:** 03\
-**Project:** Financial Advisory Compliance RAG Assistant
+**Project:** Financial Advisory Compliance RAG Assistant (VerifAI)\n**Member:** Himanshu Gupta ([@itzhimanshugt](https://github.com/itzhimanshugt))
 
-Team contributions should be tracked through GitHub issues, branches,
-commits, and pull requests.
+Work is tracked through GitHub issues, one branch and PR per concept, and the project board.
 
 ## License
 
