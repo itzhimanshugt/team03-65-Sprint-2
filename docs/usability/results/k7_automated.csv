@@ -1,0 +1,16 @@
+run,task,seconds,success
+run1,T1,16.6,1
+run1,T2,4.0,1
+run1,T3,98.9,1
+run1,T4,5.0,1
+run1,T5,4.0,1
+run2,T1,49.0,0
+run2,T2,59.0,1
+run2,T3,64.0,1
+run2,T4,4.0,1
+run2,T5,2.0,1
+run3,T1,5.0,1
+run3,T2,41.0,1
+run3,T3,119.0,1
+run3,T4,2.0,1
+run3,T5,2.0,1

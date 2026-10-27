@@ -279,7 +279,13 @@ python -m scripts.answer_eval      # 40 questions end to end, K5/K6/K8 + K3/K4 r
 
 Measured with people, using the kit in [docs/usability/](docs/usability/README.md): a timed manual-lookup baseline and interviews (#43), then 5 participants × 5 tasks and a SUS questionnaire (#44). The table comes from `python -m scripts.usability_report`.
 
-_Not run yet: the table appears here once `docs/usability/results/*.csv` hold the session data._
+Measured so far (27 Oct 2026, live site):
+
+| Measure | Result | Target | n |
+|---|---|---|---|
+| K7 system time, median (headless browser, no human) | 5.0 s, slowest 119 s (14/15 succeeded) | ≤ 60 s | 15 |
+
+The system time comes from `node scripts/k7_timing.mjs` (3 rounds of the 5 tasks; raw data in `docs/usability/results/k7_automated.csv`). It is the machine's share of K7 only: a person's typing and reading time is not in it. The slow tail is the free Gemini tier (T3 asks two questions). The SUS score (K11) and the manual-lookup baseline need people and are not measured yet (#43, #44).
 
 ## Security
 

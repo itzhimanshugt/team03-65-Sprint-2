@@ -48,6 +48,12 @@ def report(d: Path = RESULTS) -> str:
             row(
                 "K7 vs manual baseline", f"{100 * (1 - k7 / (60 * mins)):.0f}% faster", "≥ 90%", "—"
             )
+    auto = rows(d / "k7_automated.csv") if (d / "k7_automated.csv").exists() else []
+    if auto:
+        secs = [float(r["seconds"]) for r in auto]
+        ok = sum(int(r["success"]) for r in auto)
+        result = f"{median(secs):.1f} s, slowest {max(secs):.0f} s ({ok}/{len(auto)} succeeded)"
+        row("K7 system time, median (headless browser, no human)", result, "≤ 60 s", len(auto))
     if sus:
         scores = [sus_score([int(r[f"q{i}"]) for i in range(1, 11)]) for r in sus]
         row("K11 SUS, mean", f"{mean(scores):.1f}", "≥ 70", len(scores))
