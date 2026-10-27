@@ -1,0 +1,43 @@
+name: Live smoke test
+
+# After a merge, wait for Render to serve this commit's UI, then check the live site works.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke
+  cancel-in-progress: true
+
+env:
+  SITE: https://verifai-vysj.onrender.com
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Wait until the live app.js matches this commit
+        run: |
+          want=$(sha256sum app/web/static/app.js | cut -d' ' -f1)
+          for i in $(seq 1 80); do
+            got=$(curl -fs -m 60 "$SITE/static/app.js" | sha256sum | cut -d' ' -f1)
+            [ "$got" = "$want" ] && echo "deployed after ~$((i * 15)) s" && exit 0
+            sleep 15
+          done
+          echo "Render did not serve this commit's app.js within 20 minutes"; exit 1
+      - name: Check health, page and assets
+        run: |
+          chunks=$(curl -fs -m 60 "$SITE/health" | python3 -c "import json,sys; print(json.load(sys.stdin)['chunks_indexed'])")
+          echo "chunks_indexed=$chunks"
+          [ "$chunks" -gt 0 ]
+          curl -fs -m 60 "$SITE/" | grep -q 'id="ask-form"'
+          curl -fs -m 60 -o /dev/null "$SITE/static/app.css"
+          curl -fs -m 60 -o /dev/null "$SITE/documents"
