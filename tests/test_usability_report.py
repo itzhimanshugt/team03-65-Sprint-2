@@ -26,6 +26,15 @@ def test_report_from_csvs(tmp_path):
     assert "100.0" in out
 
 
+def test_report_includes_automated_k7(tmp_path):
+    for f, h in [("baseline", "q"), ("interviews", "p"), ("tasks", "p"), ("sus", "p")]:
+        (tmp_path / f"{f}.csv").write_text(h + "\n")
+    (tmp_path / "k7_automated.csv").write_text(
+        "run,task,seconds,success\nrun1,T1,10.0,1\nrun1,T2,30.0,1\nrun1,T4,20.0,0\n"
+    )
+    assert "20.0 s, slowest 30 s (2/3 succeeded)" in report(tmp_path)
+
+
 def test_report_with_empty_csvs(tmp_path):
     for f, h in [
         ("baseline", "question"),

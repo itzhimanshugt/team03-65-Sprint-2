@@ -15,6 +15,10 @@ Two short studies that replace the PRD's assumed numbers with measured ones. Eve
 3. Type the results into the CSVs in [`results/`](results/). The headers are already there.
 4. Run `python -m scripts.usability_report`. It prints the KPI table (baseline minutes, questions per day, K7, K11). Paste it into the README's **Usability results** section and PRD §1.2, then close #43 and #44.
 
+## Automated part
+
+`node scripts/k7_timing.mjs [site] [runs]` runs the five tasks of [usability-test.md](usability-test.md) in a headless Chrome or Edge (Node.js 22 or later; set `CHROME` to the browser path if it is not found), checks each against its success rule, and writes `results/k7_automated.csv`. It measures the system's share of K7 only; the human test above still gives the full K7 and the SUS score.
+
 ## Rules that keep the numbers honest
 
 - Record what happened, including failures and give-ups (`success = 0`, time = when they gave up).
