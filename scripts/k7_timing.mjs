@@ -40,9 +40,13 @@ for (let i = 0; i < 40 && !ws; i++) {
 }
 await new Promise((r) => ws.addEventListener("open", r));
 let id = 0;
-const pending = {};
-ws.addEventListener("message", (m) => { const d = JSON.parse(m.data); pending[d.id]?.(d.result); });
-const cdp = (method, params = {}) => new Promise((r) => { pending[++id] = r; ws.send(JSON.stringify({ id, method, params })); });
+const pending = new Map(); // request id → resolver; a Map so a reply's id can't reach a prototype method
+ws.addEventListener("message", (m) => {
+  const d = JSON.parse(m.data);
+  const resolve = pending.get(d.id);
+  if (typeof resolve === "function") { pending.delete(d.id); resolve(d.result); }
+});
+const cdp = (method, params = {}) => new Promise((r) => { pending.set(++id, r); ws.send(JSON.stringify({ id, method, params })); });
 const js = async (expr) => (await cdp("Runtime.evaluate", { expression: expr, awaitPromise: true, returnByValue: true }))?.result?.value;
 
 await cdp("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
@@ -52,17 +56,24 @@ const open = async (hash) => {
 };
 
 // One question: submit, wait for the finished answer card, return seconds and what it showed.
-const ASK = (q) => `(async()=>{const t0=performance.now();document.querySelector('#question').value=${JSON.stringify(q)};
+// The question goes in as a call argument, never spliced into page code.
+const ASK_FN = `async function (q) {const t0=performance.now();document.querySelector('#question').value=q;
   document.querySelector('#ask-form').requestSubmit();await new Promise(r=>setTimeout(r,300));
   for(let i=0;i<1200&&document.querySelector('#submit').disabled;i++)await new Promise(r=>setTimeout(r,100));
   const a=document.querySelector('#answer');return{s:(performance.now()-t0)/1000,text:a.innerText,
-  refused:/Not enough evidence/.test(a.innerText),sources:[...a.querySelectorAll('.cite-meta')].length,
-  docs:document.querySelector('#evidence-body')?.innerText||'',cards:[...a.querySelectorAll('.cite-card')].map(c=>c.dataset.n)}})()`;
+  refused:/Not enough evidence/.test(a.innerText),sources:[...a.querySelectorAll('.cite-meta')].length}}`;
+const ask = async (q) => {
+  const { result: win } = await cdp("Runtime.evaluate", { expression: "window" });
+  const out = await cdp("Runtime.callFunctionOn", {
+    functionDeclaration: ASK_FN, objectId: win.objectId, arguments: [{ value: String(q) }], awaitPromise: true, returnByValue: true,
+  });
+  return out?.result?.value;
+};
 
 // Warm-up so a cold free-tier start is not counted (the human protocol does the same).
 console.log("browser up, warming the site");
 await open("#ask");
-await js(ASK("What is the benchmark of HSBC Large Cap Fund?"));
+await ask("What is the benchmark of HSBC Large Cap Fund?");
 
 const rows = [];
 for (let run = 1; run <= RUNS; run++) {
@@ -78,7 +89,7 @@ for (let run = 1; run <= RUNS; run++) {
     } else {
       await open("#ask");
       let res;
-      for (const q of t.ask) { res = await js(ASK(q)); seconds += res.s; }
+      for (const q of t.ask) { res = await ask(q); seconds += res.s; }
       if (t.refusal) ok = res.refused;
       else {
         await js("document.querySelector('#answer .cite-card')?.click()");
