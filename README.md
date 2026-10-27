@@ -275,6 +275,12 @@ python -m scripts.rerank_eval      # with / without re-ranking → outputs/c26
 python -m scripts.answer_eval      # 40 questions end to end, K5/K6/K8 + K3/K4 review sheet → outputs/c34
 ```
 
+### Usability results (K7, K11)
+
+Measured with people, using the kit in [docs/usability/](docs/usability/README.md): a timed manual-lookup baseline and interviews (#43), then 5 participants × 5 tasks and a SUS questionnaire (#44). The table comes from `python -m scripts.usability_report`.
+
+_Not run yet: the table appears here once `docs/usability/results/*.csv` hold the session data._
+
 ## Security
 
 ``` text
