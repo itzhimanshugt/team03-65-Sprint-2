@@ -1,5 +1,7 @@
 # Financial Advisory Compliance RAG Assistant
 
+[![CI](https://github.com/itzhimanshugt/team03-65-Sprint-2/actions/workflows/ci.yml/badge.svg)](https://github.com/itzhimanshugt/team03-65-Sprint-2/actions/workflows/ci.yml) [![Live smoke test](https://github.com/itzhimanshugt/team03-65-Sprint-2/actions/workflows/smoke.yml/badge.svg)](https://github.com/itzhimanshugt/team03-65-Sprint-2/actions/workflows/smoke.yml)
+
 A Retrieval-Augmented Generation (RAG) application for helping financial
 advisors verify answers against approved market research, fund
 factsheets, and regulatory disclosures.
@@ -66,7 +68,7 @@ The knowledge base is **20 approved documents** listed in [data/catalog.csv](dat
 **Demo:** https://verifai-vysj.onrender.com (free Render plan: first load after idle takes ~30–60 s). Deploy steps: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ![Ask the documents](docs/screenshots/web-ask.jpg)
-![Cited answer with the evidence panel open (dark-mode browser)](docs/screenshots/web-evidence.jpg)
+![Cited answer with the evidence panel open](docs/screenshots/web-evidence.jpg)
 
 More screens: [knowledge base](docs/screenshots/web-knowledge.jpg) · [activity log](docs/screenshots/web-activity.jpg)
 
@@ -290,7 +292,7 @@ pytest        # 124 offline tests: no API calls (LLM, embeddings and vector stor
 ruff check .
 ```
 
-CI runs ruff, pytest and gitleaks on every PR.
+CI runs ruff, pytest, gitleaks and a Docker build-and-boot check on every PR. After each merge, a smoke test waits for Render to serve the new UI and checks the live site.
 
 ## GitHub Workflow
 

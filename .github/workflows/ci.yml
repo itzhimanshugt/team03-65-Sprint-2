@@ -31,6 +31,29 @@ jobs:
       - name: Tests
         run: pytest -q
 
+  docker:
+    # Builds the same image Render deploys and boots it, so a broken Dockerfile,
+    # start.sh or requirements.txt fails here instead of after the merge.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build image
+        run: docker build -t verifai .
+      - name: Boot and check health, page and assets
+        run: |
+          docker run -d --name verifai -p 7860:7860 -e PORT=7860 verifai
+          for i in $(seq 1 60); do
+            chunks=$(curl -fs localhost:7860/health | python3 -c "import json,sys; print(json.load(sys.stdin)['chunks_indexed'])" 2>/dev/null) && [ "$chunks" -gt 0 ] && break
+            sleep 5
+          done
+          echo "chunks_indexed=$chunks"
+          [ "${chunks:-0}" -gt 0 ] || { docker logs verifai; exit 1; }
+          curl -fs localhost:7860/ | grep -q 'id="ask-form"'
+          curl -fs -o /dev/null localhost:7860/static/app.js
+          curl -fs -o /dev/null localhost:7860/static/app.css
+
   secret-scan:
     runs-on: ubuntu-latest
     permissions:
